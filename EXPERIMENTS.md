@@ -1,353 +1,352 @@
-# Deepvoice 탐지 연구: 전체 시행착오와 최종 기록
+# Deepvoice Detection Research: Experiments, Failures, and Final Results
 
-작성일: 2026-09-28 · 대상: DACON 236749 딥보이스 탐지 경진대회 · 상태: 연구 종료, 보관용 회고
+Written: 2026-09-28 · Competition: DACON 236749 Deepvoice Detection · Status: Research concluded; archival retrospective
 
-## 1. 결과와 이 문서의 읽는 법
+## 1. Results and how to read this report
 
-최고 사용자 보고 서버 ADS는 **0.8362380952**로, **C693과 C704가 동점**이었다. C704는 Deezer 경로를 한 번 더 바꾼 변형이므로, 이 보관본의 대표 구현은 더 단순한 **C693**이다. 총점 0.8515229365와 ADS 0.8362380952는 다른 수치다. **목표 ADS 0.85에는 도달하지 못했다.** 사용자는 연구를 종료하면서 30위로 마무리한다고 알려 주었으며, 이는 종료 시점의 사용자 보고이지 공식 최종 순위 인증이 아니다.
+My highest recorded server ADS was **0.8362380952**, a tie between **C693 and C704**. C704 made one additional change to the Deezer path, so I chose the simpler **C693** as the representative implementation in this archive. The overall score of 0.8515229365 is distinct from the ADS of 0.8362380952. **I did not reach my target ADS of 0.85.** I was in 30th place when I stopped the research; I have not independently verified the official final ranking.
 
-이 문서는 초기 베이스라인부터 C753까지 보존 기록을 연결한 하나의 회고다. 새로운 실험을 수행하지 않았다. 모델을 바꾼 이유, 공개 자료에서 실제로 관측한 효과, 서버 결과, 반례와 코드·평가 오류, 다음 접근으로 옮긴 이유를 함께 기록했다.
+I compiled this retrospective from the records I retained, from the initial baseline through C753. I did not run new experiments to prepare it. I record why I changed each model, what I actually measured on public data, the server results, counterexamples, implementation and evaluation errors, and why I moved to the next approach.
 
-| 읽을 부분 | 내용 |
+| Section | Coverage |
 |---|---|
-| 2장 | V1–C349: 초기 모델·포렌식 특징·File 결합·실제 전문가 학습 |
-| 3장 | C350–C660: 공동 File, 시간 학습, EAT, 검증 재설계와 증거 전달 경로 |
-| 4장 | C660–C753: 최고 C693, 후속 회귀, 보존 학습과 마지막 event 학습 |
-| 5장 | 전체 시행착오에서 남긴 결론 |
-| 부록 A | 보존된 C-번호별 원 작업공간 경로와 대표 근거 색인 |
+| 2 | V1–C349: Initial models, forensic features, File fusion, and expert-model training |
+| 3 | C350–C660: Joint File prediction, temporal learning, EAT, validation redesign, and evidence routing |
+| 4 | C660–C753: The best C693 model, subsequent regressions, retention training, and the final event-learning approach |
+| 5 | Lessons from the full sequence of experiments |
+| Appendix A | Original workspace paths and representative evidence for the retained C-number records |
 
-최고 모델의 정확한 구조·가중치·출력 역할은 [MODEL_CARD.md](MODEL_CARD.md), 주석 코드는 [annotated/script.py](annotated/script.py), 실행 원본 소스 사본은 [src/script.py](src/script.py)에 있다. 이 저장소에는 거대한 제출 ZIP이나 모델 가중치·오디오가 없다. [재현 범위](REPRODUCIBILITY.md)와 [권리 고지](THIRD_PARTY_NOTICES.md)를 함께 읽어야 한다.
+The exact structure, weights, and output roles of my best model are described in [MODEL_CARD.md](MODEL_CARD.md). The annotated code is in [annotated/script.py](annotated/script.py), and the unchanged inference-source copy is in [src/script.py](src/script.py). This repository does not contain the large submission ZIP, model weights, or audio. Read the [reproducibility scope](REPRODUCIBILITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md) alongside this report.
 
-### 측정과 기록의 구분
+### Distinguishing measurements from records
 
-- **서버 점수:** 사용자가 제공한 제출 화면과 그 화면을 옮긴 보존 보고서의 집계값이다. 이 정리에서 비공개 평가 데이터, 개별 예측·정답, 최신 리더보드를 열어 확인하지 않았다.
-- **공개 평가:** 외부 공개 자료로 만든 로컬 개발/확인 패널이다. 같은 부모의 crop·codec·혼합 반복을 독립 음원으로 세지 않는다.
-- **source-proxy:** 출처의 REAL/FAKE를 대리 라벨로 사용한 지표다. 공식 File/Voice/Music/Presence 정답과 동의어가 아니다.
-- **OOF:** 명시한 학습 층과 분할에만 적용된다. 결합기만 제외해서 학습한 OOF가 상류 음향 모델까지 미관측이었다는 뜻은 아니다.
-- **진단 경계:** EER를 설명하는 ROC 경계이지 제출 ZIP에 고정 임계값을 넣었다는 뜻이 아니다.
-- **완료/실패/준비:** 학습 완료, 추론 완료, 성능 개선, 실행 전 오류, 권리 HOLD, 미실행 계획을 따로 기록한다.
+- **Server scores:** Aggregate values from my retained submission screenshots and the reports transcribed from them. I did not access private evaluation data, per-file predictions or labels, or a live leaderboard while preparing this archive.
+- **Public evaluations:** Local development and checking panels built from externally available public data. Crops, codecs, and mixtures derived from the same parent are not independent source recordings.
+- **Source proxy:** A metric using a source's REAL/FAKE status as a proxy label. It is not synonymous with official File, Voice, Music, or Presence ground truth.
+- **OOF:** Out-of-fold separation applies only to the explicitly named training layer and split. Training a fusion head out of fold does not mean the upstream acoustic model never saw the source.
+- **Diagnostic boundary:** An ROC boundary used to explain EER, not a fixed decision threshold added to the submission ZIP.
+- **Completed, failed, or prepared:** I distinguish completed training, completed inference, measured improvement, pre-execution errors, rights-related HOLD decisions, and plans that were never executed.
 
-파일시스템에는 최고 번호 C753까지 **656개의 C-식별자, 704개 관련 디렉터리**가 남아 있다. 이 숫자는 완료한 학습 횟수가 아니다. 초기 V 계열, 조사·감사·특징 추출·패키징·중단된 계획도 별도 기록이다. 본문은 의사결정에 영향을 준 주요 흐름을 설명하며, 부록은 작은 시도까지 추적할 수 있도록 보존 경로를 열거한다. 삭제된 원 기록을 복원하거나 모든 번호의 실행 여부를 새로 인증했다는 뜻은 아니다.
+The retained filesystem contains **656 C identifiers across 704 related directories**, with C753 as the highest identifier. This is not a count of completed training runs. The initial V series, investigations, audits, feature extraction, packaging, and abandoned plans also have their own records. The main text covers the decisions that shaped the project; the appendix lists retained paths so smaller trials can also be traced. I have not reconstructed deleted records or newly certified the execution status of every identifier.
 
-### 끝까지 남은 한계
+### Limitations that remain
 
-공개 검증을 반복해서 보며 구조를 선택했으므로 선택 편향이 남는다. 서버와 공개 지표의 차이를 숨은 생성기 비율로 역산해 최적화하지 않았고, 특정 조합의 서버 점수 상승을 보편적 일반화로 주장하지 않는다. 일부 코드·전처리 오류는 실제로 찾아 정정했으나 모든 성능 실패가 코드 오류 때문이었다는 증거도 없다.
+I repeatedly consulted public validation results when selecting architectures, so selection bias remains. I did not optimize by reverse-engineering hidden generator proportions from the difference between public and server metrics, and I do not treat a server gain for one configuration as universal generalization. I found and corrected some genuine implementation and preprocessing errors, but I have no evidence that every performance failure was caused by code.
 
-실제 학습 파일·부모·체크포인트·실패 기록·최선 ZIP은 원 작업공간에 남겼다. 이 문서나 SHA 색인은 실제 학습 데이터 보존 의무를 대신하지 않는다. 권리 이전 및 가중치 재배포의 미해결 사항은 그대로 남는다.
+I retained the actual training files, parents, checkpoints, failure records, and best submission ZIP in the original workspace. Neither this report nor a SHA index replaces the obligation to preserve actual training data. Unresolved rights-transfer and weight-redistribution conditions remain unresolved.
 
+## 2. Early research — from the official baseline to C349
 
-## 2. 초기 연구 — 공식 베이스라인에서 C349까지
+I reconstructed this retrospective from the records I preserved for 2026-08-27 through 2026-09-10, focusing on why I changed models, what actually happened, and how I changed direction after failures. C numbers are not training-run counts. Research, data acquisition, implementation audits, formula replay, actual training, and packaging share the same numbering system; a higher number does not mean I ran that many independent experiments. Below, `public` means local evaluation on externally available public material, and `server` means my recorded DACON submission results. I do not treat a public ADS proxy as the same measurement as server ADS.
 
-이 절은 2026-08-27~2026-09-10의 보존 기록을 바탕으로, 모델을 바꾼 이유와 실제 결과, 실패 뒤 방향 전환을 재구성한 회고다. C번호는 학습 횟수가 아니다. 조사, 데이터 취득, 구현 감사, 수식 재생, 실제 학습, 패키징이 같은 번호 체계에 섞여 있으며, 번호가 크다는 이유로 그만큼 독립 실험을 했다고 계산하지 않는다. 아래 `공개`는 외부 공개 자료로 구성한 로컬 평가이고, `서버`는 사용자가 전달한 DACON 제출 결과다. 공개 ADS proxy를 서버 ADS와 같은 측정으로 취급하지 않는다.
+At that time, public development200 was a mono WAV panel comprising 120 four-second and 80 eight-second examples assembled from 40 sources/10 pairs. Music160 likewise did not contain 160 independent tracks. I repeatedly used the same material to design and select candidates, so even source-group OOF was not a new independent confirmation set. The name `lockbox` also referred to an internal split of a public synthetic panel, not DACON's private evaluation data. I interpret splits subsequently reused or incorporated into training according to their actual status.
 
-당시 공개 development200은 원천40개/10쌍을 조합한 4초120개와 8초80개, 모노 WAV 패널이었다. Music160 역시 독립160곡이 아니다. 같은 자료를 후보 설계와 선택에 반복 사용했으므로 source-group OOF라도 새 독립 확인셋은 아니다. 당시 `lockbox`라는 이름도 DACON 비공개 평가가 아니라 공개 합성 패널의 내부 분할을 뜻한다. 이후 반복 사용하거나 학습에 편입된 분할은 그 상태에 맞게 해석한다.
+Evidence: Section 5, "Gaps in the Development Set Identified Before Speculating About Server Data," in `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, and the final note in `docs/RESEARCH_RESUME_STATUS_2026-09-06.md`.
 
-근거: `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`의 「5. 서버 데이터 추측보다 먼저 확인된 개발셋의 빈틈」, `docs/RESEARCH_RESUME_STATUS_2026-09-06.md`의 마지막 주석.
+### 2.1 Verifiable Server Milestones
 
-### 2.1 검증 가능한 서버 이정표
+I retained the original precision of the early rounded display values. Changes affecting only one output, such as C241 to C349, must be distinguished from Music changes that also propagated into File. ADS changes involving multiple outputs do not let me reconstruct absolute EER for each component.
 
-초기 반올림 화면 값은 원문 정밀도를 유지했다. C241→C349처럼 한 출력만 바뀐 경우와, Music 변경이 File로도 전달된 경우를 구분해야 한다. 여러 출력이 바뀐 ADS만으로 성분별 절대 EER을 복원할 수 없다.
-
-| 단계 | 제출에서 달라진 핵심 | 서버 총점 | 서버 ADS | 결과 근거 |
+| Stage | Main submission change | Server total score | Server ADS | Result evidence |
 |---|---|---:|---:|---|
-| V1 | DF/SONICS 음악 결합, File probabilistic OR | .69332 | .66046 | `docs/EXPERIMENT_RETROSPECTIVE_AND_CLEANUP_2026-09-01.md`, §3 |
-| V2 | DF+Spectra Voice, SONICS alpha5s Music, File MAX | .72092 | .69112 | 위 문서 §3, `docs/SOLUTION_V2.md` §1~4 |
-| V3 | selector·pooling·시간정렬·gamma120 동시 변경 | .7104943651 | .6795396825 | 회고 §3~4 |
-| temporal-only | File의 동시간 presence×fake | .7182872222 | .6881984127 | 회고 §3~4 |
-| selector-only | PANNs 상위창 선택 | .7186586508 | .6886111111 | 회고 §3~4 |
-| gamma-only | raw gamma120 음악 | .7062015079 | .6747698413 | 회고 §3~4 |
-| pooling-only | Voice logit .75max+.25mean | .7226300794 | .6930238095 | 회고 §3~5 |
-| V5 | SONICS:Deezer:Fourier=2:3:3 | .7966872222 | .7753095238 | 회고 §11, 서버14분29초 |
-| C2 | File monotone calibrated OR | 약 .80491 | 약 .78445 | `docs/C2_FILE_FUSION_LEADERBOARD_RESULT_2026-09-02.md`, 「서버 결과」 |
-| C2+EnvSDD10% | File 확률 고정 혼합 | .8027300794 | .7820238095 | `docs/FAST_LEADERBOARD_PROBES_2026-09-03.md`, 결과표 |
-| C2+EnvSDD20% | File 확률 고정 혼합 | .7966872222 | .7753095238 | 위 문서 결과표 |
-| 최초 C3 | aligned File | 실행 실패 | — | 위 문서 「C3 aligned File-fusion」 |
-| C3 복구본 | 같은 파일 nearest interval fallback | .8090943651 | .7890952381 | `docs/C3_ALIGNED_NEAREST_LEADERBOARD_RESULT_2026-09-04.md`, §1 |
-| C8 | C3 내부 Music event를 외부 Music으로 노출 | .8090943651 | .7890952381 | 초기 회고 §14, C3와 표시값 동점 |
-| C29 | LPC residual을 classical 음악에 추가 | .8106372222 | .7908095238 | 초기 회고 §15, 서버19분03초 |
-| C51 | File 음악 head에 직접 Fourier/C29 입력 | .8185443651 | .7995952381 | `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, §2 |
-| C52 | File을 C3 계열로 복귀 | .8121800794 | .7925238095 | 위 문서 §2 |
-| C58 | C52에 raw/stem Fourier routing | .8121800794 | .7925238095 | 위 문서 §2 |
-| C71 | 짧은 구간 raw/stem consensus | .8106372222 | .7908095238 | `docs/RESEARCH_RESUME_STATUS_2026-09-07.md`, 「C71 서버 결과」 |
-| C159 | 선택4초 Dasheng과 최종 Music 50:50 | .7992586508 | .7781666667 | `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`, 첫 절 |
-| C190 | C51 내부 Deezer를 추가 학습 전문가로 교체 | .8265800794 | .8085238095 | `docs/C190_TO_C212_RESEARCH_2026-09-08.md`, §1 |
-| C212 | 두 Deezer 및 작은 내부 Dasheng 역할 | .8281229365 | .8102380952 | `docs/RESEARCH_RESUME_STATUS_2026-09-09.md`, 「확인된 서버 결과」 |
-| C241 | presence 가중 Deezer+File 원음 Voice 보완 | .8292157937 | .811452381 | `docs/RESEARCH_RESUME_C241_SERVER_2026-09-09.md`, 첫 단락 |
-| C349 | 외부 Music만 C346 고정 비중 | .8330729365 | .8157380952 | `docs/C349_C346_MUSIC_ONLY_REPORT_2026-09-09.md`, 서버 결과 추가 |
+| V1 | DF/SONICS Music fusion, probabilistic OR for File | .69332 | .66046 | `docs/EXPERIMENT_RETROSPECTIVE_AND_CLEANUP_2026-09-01.md`, Section 3 |
+| V2 | DF+Spectra Voice, SONICS alpha5s Music, MAX for File | .72092 | .69112 | Same document, Section 3; `docs/SOLUTION_V2.md`, Sections 1-4 |
+| V3 | Simultaneous changes to selector, pooling, temporal alignment, and gamma120 | .7104943651 | .6795396825 | Retrospective, Sections 3-4 |
+| temporal-only | Contemporaneous presence x fake for File | .7182872222 | .6881984127 | Retrospective, Sections 3-4 |
+| selector-only | Selection of the highest-scoring PANNs windows | .7186586508 | .6886111111 | Retrospective, Sections 3-4 |
+| gamma-only | Raw gamma120 Music | .7062015079 | .6747698413 | Retrospective, Sections 3-4 |
+| pooling-only | Voice logit .75max+.25mean | .7226300794 | .6930238095 | Retrospective, Sections 3-5 |
+| V5 | SONICS:Deezer:Fourier=2:3:3 | .7966872222 | .7753095238 | Retrospective, Section 11; server runtime 14m29s |
+| C2 | Monotone calibrated OR for File | Approximately .80491 | Approximately .78445 | `docs/C2_FILE_FUSION_LEADERBOARD_RESULT_2026-09-02.md`, "Server Results" |
+| C2+EnvSDD10% | Fixed probability mixture for File | .8027300794 | .7820238095 | `docs/FAST_LEADERBOARD_PROBES_2026-09-03.md`, results table |
+| C2+EnvSDD20% | Fixed probability mixture for File | .7966872222 | .7753095238 | Same document, results table |
+| Initial C3 | Aligned File | Execution failed | — | Same document, "C3 Aligned File Fusion" |
+| Repaired C3 | Nearest-interval fallback within the same file | .8090943651 | .7890952381 | `docs/C3_ALIGNED_NEAREST_LEADERBOARD_RESULT_2026-09-04.md`, Section 1 |
+| C8 | Exposed C3's internal Music event as the external Music output | .8090943651 | .7890952381 | Early retrospective, Section 14; tied C3 at the displayed precision |
+| C29 | Added LPC residuals to classical Music features | .8106372222 | .7908095238 | Early retrospective, Section 15; server runtime 19m03s |
+| C51 | Direct Fourier/C29 inputs to the File Music head | .8185443651 | .7995952381 | `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, Section 2 |
+| C52 | Reverted File to the C3 family | .8121800794 | .7925238095 | Same document, Section 2 |
+| C58 | Added raw/stem Fourier routing to C52 | .8121800794 | .7925238095 | Same document, Section 2 |
+| C71 | Raw/stem consensus over short intervals | .8106372222 | .7908095238 | `docs/RESEARCH_RESUME_STATUS_2026-09-07.md`, "C71 Server Results" |
+| C159 | 50:50 mixture of Dasheng on a selected four-second segment and final Music | .7992586508 | .7781666667 | `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`, opening section |
+| C190 | Replaced Deezer inside C51 with a further-trained expert | .8265800794 | .8085238095 | `docs/C190_TO_C212_RESEARCH_2026-09-08.md`, Section 1 |
+| C212 | Two Deezer models and a small internal role for Dasheng | .8281229365 | .8102380952 | `docs/RESEARCH_RESUME_STATUS_2026-09-09.md`, "Confirmed Server Results" |
+| C241 | Presence-weighted Deezer plus raw-audio Voice supplementation for File | .8292157937 | .811452381 | `docs/RESEARCH_RESUME_C241_SERVER_2026-09-09.md`, opening paragraph |
+| C349 | Fixed C346 weights for external Music only | .8330729365 | .8157380952 | `docs/C349_C346_MUSIC_ONLY_REPORT_2026-09-09.md`, server-results addendum |
 
-V3 이후 위 제출의 CPS 기록은 .9890865079다. C2는 약 .98908 표시값만 남는다. C46은 초기 회고에 패키징까지 기술돼 있고 후속 서버 변화 감사에서 C29 대비 ADS +.003786, C46→C51 +.005000이 확인된다. 여기서는 원 화면의 전체 점수 자릿수를 새로 만들어 표에 채우지 않았다. 서버 자료의 일반적인 한계는 사용자 제공 값이라는 점과 개별 예측·정답·서버 업로드 SHA가 별도로 없다는 점이다.
+The recorded CPS for the submissions above from V3 onward is .9890865079. Only the approximate displayed value .98908 remains for C2. The early retrospective documents C46 through packaging, and a later audit of server-score changes confirms ADS +.003786 from C29 to C46 and +.005000 from C46 to C51. I have not invented additional digits for the original total-score display to fill the table. The general limitations of the server evidence are that these are my recorded server results, without separate per-file predictions, labels, or SHA hashes identifying the server uploads.
 
-근거: `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`의 「1. 어느 출력이 점수를 움직였는가」.
+Evidence: Section 1, "Which Outputs Moved the Score," in `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`.
 
-### 2.2 V1~V3: 모델 역할과 시간 집계를 먼저 배웠다
+### 2.2 V1-V3: I First Learned About Model Roles and Temporal Aggregation
 
-공식 베이스라인은 PANNs로 Voice/Music 존재, HTDemucs로 성분 분리, DF-Arena1B로 진위를 판정했다. V1은 음악 전문가 SONICS beta5s를 넣었지만, 반주 DF와 SONICS를 근거 없이 동일 logit 비중으로 섞고 원음 SONICS까지 File OR에 넣었다. 서버 실행은 됐으나 ADS .66046이었다. 당시 CPS .98908의 추가 총점 여지는 약 .0011뿐이므로 authenticity가 우선이라는 판단이 나왔다.
+The official baseline used PANNs for Voice/Music presence, HTDemucs for component separation, and DF-Arena1B for authenticity. In V1, I added the Music expert SONICS beta5s, but mixed accompaniment DF and SONICS with equal logit weights without supporting evidence, and also included raw-audio SONICS in File OR. The server run succeeded, but ADS was .66046. With CPS already .98908, the remaining possible total-score gain from CPS was only about .0011, which led me to prioritize authenticity.
 
-V2는 입력과 전문가 역할을 분리했다. 반주의 음성용 DF 및 raw Music 보조 경로를 제거하고, SONICS alpha5s를 반주에 사용했다. Voice에는 DF와 Spectra-AASIST3를 결합했다. 공개17도메인 2,001,847발화 점수에서 DF/Spectra/고정 결합의 macro EER은 3.5359%/1.4461%/.9266%, leave-one-domain-out 결합은 .9871%였다. 계수 .6918309709189366은 이 공개 자료로 정했다. 다만 이는 원음 첫 창의 공개 점수 검증으로, Demucs·전화·노래·혼합 파형 실험을 대신하지 않았다. File은 공식 MAX로 복귀했고 서버 ADS .69112가 됐다.
+For V2, I separated the inputs and the experts' roles. I removed the voice-oriented DF path on accompaniment and the auxiliary raw Music path, and applied SONICS alpha5s to accompaniment. For Voice, I combined DF and Spectra-AASIST3. On public scores for 2,001,847 utterances across 17 domains, macro EER was 3.5359%/1.4461%/.9266% for DF/Spectra/the fixed combination; leave-one-domain-out fusion achieved .9871%. I chose the coefficient .6918309709189366 from these public data. However, this validated public first-window scores on raw audio; it did not replace waveform experiments involving Demucs, telephone channels, singing, or mixtures. I returned File to the official MAX rule, and server ADS reached .69112.
 
-V3는 짧은 발화 누락, max 오탐, 서로 다른 시점의 presence/fake peak 곱, 장문맥 음악 모델이라는 네 가설을 동시에 구현했다. PANNs 상위4창+양끝2창, Voice .75max+.25mean, 동시간 File 결합, raw SONICS gamma120이었다. 서버 ADS .6795396825로 후퇴했으므로 한 변경씩 분리했다. 네 ablation 중 pooling만 .6930238095로 올라 이후 기반이 됐다. gamma120은 4~60초를120초 입력으로 채우며 원음 가짜음성을 Music으로 읽을 가능성이 있었지만, 이 설명을 서버에서 확정된 원인으로 단정할 수는 없다.
+In V3, I implemented four hypotheses at once: missed short utterances, false positives from max pooling, multiplication of presence/fake peaks from different times, and a long-context Music model. The changes were the top four PANNs windows plus two endpoint windows, Voice .75max+.25mean, contemporaneous File fusion, and raw SONICS gamma120. Server ADS fell to .6795396825, so I separated the changes. Of the four ablations, only pooling improved ADS, to .6930238095, and became the subsequent baseline. Padding 4-60 seconds to gamma120's 120-second input might have caused it to interpret fake speech in raw audio as Music, but I cannot present that explanation as a cause established by server evidence.
 
-후속 pooling 감사의 .63 최소점과 .75의 EER 차이는 .002419 percentage point였고, 재그룹화 최적값은 .61~.77로 움직였다. 더 중요한 9/10 정정은 이 실험이 독립 발화 점수를 묶은 synthetic pseudo-file이라는 점이다. 실제 인접창·Demucs·전화·부분위조를 추론한 결과가 아니며, 예전 scenario 동등가중 설명도 실제40/30/30과 달랐다. 서버에서 유효했던 .75 구현은 보존하되 보편 최적계수라는 주장은 철회해야 한다.
+In a later pooling audit, the EER difference between the minimum at .63 and the implemented .75 was .002419 percentage point, and regrouping moved the optimum between .61 and .77. The more important correction on September 10 was that this experiment used synthetic pseudo-files assembled from independent utterance scores. It was not inference on actual adjacent windows, Demucs outputs, telephone audio, or partial fakes. The earlier description of equally weighted scenarios also differed from the actual 40/30/30 weighting. I preserved the .75 implementation that had worked on the server, while withdrawing the claim that it was a universally optimal coefficient.
 
-근거: `docs/SOLUTION_V1.md` §2~5, `docs/SOLUTION_V2.md` §2~4, 초기 회고 §4~5, `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md` 전문.
+Evidence: `docs/SOLUTION_V1.md`, Sections 2-5; `docs/SOLUTION_V2.md`, Sections 2-4; early retrospective, Sections 4-5; the full `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md`.
 
-### 2.3 V4 주변 탐색과 V5: 음악 전문가 다양성이 첫 큰 전환이었다
+### 2.3 Exploration Around V4 and V5: Diversity Among Music Experts Produced the First Major Change
 
-V4라는 이름의 ArtifactNet 준비 폴더는 존재하지만 실제 승격·제출된 V4라고 쓰면 틀린다. raw ArtifactNet은 pure-music macro EER .10/AUC .9625였으나 음성 혼합 wideband EER .25~.325, 전화 근사 .325~.375로 약해졌다. Demucs 반주에 적용하면 pure-music EER .05에도 speech-only accompaniment20개 전부에서 .5 이상을 출력했다. 반주 분리가 새 artifact와 음성 누출을 만들 수 있음을 드러낸 사례다. raw Music 교체는 기존 SONICS보다 macro EER .510417→.368056으로 개선됐지만 절대·전화 조건 gate를 넘지 못했다. 고정/조건부 결합은 EER 추가 개선0, temporal median은 전체 숫자 .15에도 crossfit EER 개선0이었다.
+An ArtifactNet preparation folder named V4 exists, but it would be incorrect to describe V4 as an actually promoted and submitted version. Raw ArtifactNet achieved pure-music macro EER .10/AUC .9625, but weakened to EER .25-.325 on wideband speech mixtures and .325-.375 under a telephone approximation. Applied to Demucs accompaniment, it achieved pure-music EER .05 yet output at least .5 for all 20 speech-only accompaniment examples. This showed that accompaniment separation could introduce new artifacts and speech leakage. Replacing raw Music improved macro EER from .510417 to .368056 relative to SONICS, but failed the absolute and telephone-condition gates. Fixed/conditional fusion produced zero additional EER improvement. Temporal median had an overall figure of .15, but zero crossfit EER improvement.
 
-SONICS alpha/beta/gamma 결합은 macro EER .443743→.414730이지만 AUC .601166→.582602, micro EER .439803→.450329로 악화했다. 공개 외부 음성 모델도 조사했으나 라이선스·실행경로·용량 또는 보완성 증거가 부족했다. SONAR는 훗날 실제300개 AUC .570044/EER .466667까지 측정됐지만 fairseq→Transformers 변환의 수치 동등성이 미확정이다. 따라서 공식 모델 전체의 성능 실패라고 확장해서는 안 된다.
+Combining SONICS alpha/beta/gamma improved macro EER from .443743 to .414730, while worsening AUC from .601166 to .582602 and micro EER from .439803 to .450329. I also investigated publicly available external Voice models, but lacked sufficient evidence on licensing, execution paths, size, or complementarity. I later measured SONAR on 300 actual examples, obtaining AUC .570044/EER .466667, but numerical equivalence of the fairseq-to-Transformers conversion remained unconfirmed. I therefore cannot generalize that result into a performance failure of the official model as a whole.
 
-V5의 Fourier는 초기에 기각한 공개 fakeprint checkpoint와 별개로 직접 학습했다. 공개 fake300+권리 필터 real320의620원천에서 길이·codec 변형6,696행, 7,167차원 특징을 만들고 원천 분리6fold에서 logistic C=.01을 선택했다. 단독 OOF provider-condition macro EER/AUC .163649/.883275였다. Deezer SpecNN은 공식 오래된 checkpoint를 pickle-free NPZ로 내보내 오프라인 추론 경로를 재현했다. SONICS 반주, Deezer 원음 스펙트럼, Fourier 원음 잔차의 2:3:3 logit 결합을 공개620원천×4조건/2,480행과184개 사전 후보의 grouped/nested 검증으로 정했다.
+I trained V5's Fourier model myself, separately from the public fakeprint checkpoint I had rejected earlier. From 620 sources—300 public fakes plus 320 rights-filtered real sources—I produced 6,696 rows of duration/codec variants with 7,167-dimensional features and selected logistic C=.01 using six source-separated folds. Standalone OOF provider-condition macro EER/AUC was .163649/.883275. I exported Deezer SpecNN's official older checkpoint to pickle-free NPZ and reproduced its offline inference path. I selected a 2:3:3 logit combination of SONICS accompaniment, Deezer raw-audio spectra, and Fourier raw-audio residuals through grouped/nested validation over 620 public sources x four conditions/2,480 rows and 184 prespecified candidates.
 
-기존 SONICS→triad의 공개 macro EER .264171→.151980, nested stitched .163324였다. MUSAN source-shift EER .254444→.165000, 실제 Demucs clean120 fold-macro .25→.116667도 개선됐다. 서버 ADS는 pooling .6930238095→V5 .7753095238, +.0822857143으로 초기 최대 도약이었다. 모델별 score 상관 .3325~.5282와 서로 다른 입력 표현은 보완성의 공개 근거이지만, 개선량을 Music/File에 나눠 인과적으로 귀속할 수는 없다.
+Public macro EER improved from .264171 for the existing SONICS model to .151980 for the triad, with nested stitched EER .163324. MUSAN source-shift EER also improved from .254444 to .165000, and fold-macro EER on 120 actual clean Demucs examples improved from .25 to .116667. Server ADS increased from pooling's .6930238095 to V5's .7753095238, a gain of +.0822857143 and the largest early jump. Pairwise model-score correlations of .3325-.5282 and different input representations provided public evidence of complementarity, but they do not let me causally allocate the gains between Music and File.
 
-이 과정에는 학습 전 provenance 오류를 막은 시행착오도 있었다. ArtifactBench shard044를 실제 REAL이라고 여겼으나 Udio AI17행이어서 격리했다. FMA materializer의 shard/generator/REJECT 처리, 실제 ZIP geometry를 수정한 뒤에야 자료를 생성했다. 이는 성능 실패와 구분할 데이터·구현 오류다. 실제 최종 학습 파일과 부모·변형은 보존했으며 manifest만으로 파일 제출을 대체하지 않는다.
+This phase also included mistakes that I caught before training with incorrect provenance. I initially treated ArtifactBench shard044 as actual REAL material, but it contained 17 Udio AI rows, so I quarantined it. I generated the material only after fixing the FMA materializer's shard/generator/REJECT handling and its assumptions about the actual ZIP geometry. These were data and implementation errors, distinct from performance failures. I preserved the files actually used in final training along with their parents and variants; manifests do not substitute for submitting the actual files.
 
-근거: 초기 회고 §6~8, §11, `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md` §2.
+Evidence: early retrospective, Sections 6-8 and 11; `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md`, Section 2.
 
-### 2.4 C1~C13과 v7~v25: File 결합 개선, 그리고 조기 시험으로의 전환
+### 2.4 C1-C13 and v7-v25: Better File Fusion and a Shift Toward Early Testing
 
-V5 이후 C0=공식 MAX, C1=무학습 soft-OR, C2=비음수 calibrated-OR를 공개200에서 비교했다. File EER은 .1851648352/.1703296703/.1554945055였다. C1은 AUC·순차 조건·bootstrap 실패, C2는 bootstrap .7438964844와 최악 cell 악화 .05 때문에 엄격 승격 기준에 실패했다. 그러나 C2 제한 서버 시험은 ADS 약 .78445로 개선됐다. 작은 개발셋의 gate가 서버 일반화를 완벽히 판정하지 못한다는 사례이지, gate를 사후 PASS로 바꿀 이유는 아니다.
+After V5, I compared C0=official MAX, C1=untrained soft OR, and C2=nonnegative calibrated OR on the public 200-example panel. File EER was .1851648352/.1703296703/.1554945055. C1 failed the AUC, sequential-condition, and bootstrap criteria; C2 failed the strict promotion criteria because its bootstrap result was .7438964844 and its worst-cell deterioration was .05. Nevertheless, a limited C2 server test improved ADS to approximately .78445. This illustrated that a small development set's gates could not perfectly judge server generalization; it did not justify retroactively changing the gate to PASS.
 
-C3는 global과 같은 파일 시간정렬 evidence를 함께 썼다. 최초 evaluator는 실제 feature schema3에 schema2를 요구해 C3를 실행하지 못했다. 동결 receipt는 `c3_available=false`로 남기고 별도 사후 진단을 실시했다. File EER .1296703297로 C2보다 좋아졌지만 sequential/temporal macro .15→.20, bootstrap .89990234375로 연구 gate는 실패했다. 최초 서버에서는 `C3 found no interval overlap`로 종료됐다. 겹치는 창이 없으면 같은 파일 안에서 interval gap→center gap→원 index 순으로 최근접 창을 고르는 결정적 fallback을 추가했고, 계수는 유지했다. 복구본 서버 ADS .7890952381은 실행 오류 복구와 성능 확인을 함께 이뤘다.
+C3 used both global evidence and temporally aligned evidence within the same file. The initial evaluator required feature schema2 although the actual features used schema3, so it could not run C3. I left the frozen receipt at `c3_available=false` and performed a separate post hoc diagnostic. File EER improved over C2 to .1296703297, but sequential/temporal macro EER worsened from .15 to .20 and the bootstrap result was .89990234375, so the research gate failed. The first server run terminated with `C3 found no interval overlap`. I added a deterministic fallback: when no windows overlapped, it chose the nearest window within the same file by interval gap, then center gap, then original index. I kept the coefficients unchanged. The repaired version's server ADS of .7890952381 confirmed both recovery from the execution error and the resulting performance.
 
-EnvSDD는 새로운 환경음 진위 증거를 기대했으나 CPython·토치·loader·파일 접근·ABI 관련 준비가 길어졌다. AudioMosaic도 그 후속 경로에 종속됐다. 여러 버전의 정적 준비나 import 성공을 모델 학습 횟수로 세지 않는다. C2+EnvSDD .10/.20은 공개 최적화가 아닌 사전 고정 탐색 비중이었고 서버 ADS .7820238095/.7753095238로 모두 하락했다. 추가 alpha 탐색을 종료했고 사용자 지시에 따라 EnvSDD/AudioMosaic를 중단했다. 9/3부터는 실제1음원→소배치 성능을 먼저 보는 방향을 명시했다.
+I expected EnvSDD to supply new authenticity evidence from environmental sound, but preparation involving CPython, Torch, loaders, file access, and ABI issues became protracted. AudioMosaic also depended on that follow-on path. Static preparation across multiple versions or a successful import does not count as model training. The C2+EnvSDD .10/.20 weights were exploratory values fixed in advance, not optimized on public data, and both reduced server ADS, to .7820238095/.7753095238. I ended further alpha searches and stopped EnvSDD/AudioMosaic. From September 3, I explicitly adopted the approach of testing one actual audio file and then a small batch before further development.
 
-그 뒤 작은 후보들은 다음처럼 구분된다.
+I distinguish the subsequent small candidates as follows.
 
-| 후보/가설 | 공개에서 실제 본 결과 | 판단의 범위 |
+| Candidate/hypothesis | Actual public result | Scope of the conclusion |
 |---|---|---|
-| C4 raw Voice 특징 추가 | File EER .1296703→.1445055 | 같은 raw 정보를 새 File 보정 입력으로 넣는 방식 실패 |
-| C5 음악 전문가를 독립 입력으로 분해 | Music .30→.2875, File .1296703→.1445055 | 성분 개선이 File 이득으로 남지 않음 |
-| C6 WavLM-OC 보완 | File/Voice EER 동점, AUC만 소폭 상승 | 오류 보완 약함, 계수 재탐색 안 함 |
-| C7/C8 event를 외부 성분 출력으로 노출 | C7 Voice .05→.075; C8 Music .30→.2625 | C8는 C7 후 사후 격리, 엄격 gate 실패; 서버 C3 동점 |
-| C9 조건부 Music | Music EER .30, C8 .2625보다 약함 | 기존200에서 조건 재조정 중단 |
-| C10 C8/C5/V5 동일가중 logit 평균 | EER .275, AUC .78015625 | AUC 개선만 남음; 3자 평균이 정확한 수식 |
-| C12 event max | File .1296703→.1445055 | 기존 점수 재조합의 이득 없음 |
-| real-only PPCA32 | 실제REAL226 fit, small24 EER .5/AUC .486111 | 실행 성공 후 신호 실패 |
-| C13 CQT-Cepstrum CNN | small40 EER .35, C8 .20 | 초기 선형 Fourier와 다른 모델임을 확인 후 실제 기각 |
-| AFSS/QAMO | RADAR24 EER 각각 .5/.5 | 실제 strict-load·forward 성공, 작은 패널 성능 및 권리 한계 |
-| AntiDeepfake-Small | RADAR24 .25, ITW20 File .40(C2 .30) | 이 ITW 수치를 Voice 진위 성능으로 일반화하지 않음 |
-| EfficientAT presence | 2,212행 CPS .9888334505→.9882881955 | 초기 ABI 준비 실패 뒤 실제 완주, PANNs 유지 |
+| C4 added raw Voice features | File EER .1296703→.1445055 | Reusing the same raw information as new File-correction inputs failed |
+| C5 separated Music experts into independent inputs | Music .30→.2875, File .1296703→.1445055 | Component improvement did not survive as a File gain |
+| C6 WavLM-OC supplementation | File/Voice EER tied, only a small AUC increase | Weak error complementarity; I did not search coefficients again |
+| C7/C8 exposed events as external component outputs | C7 Voice .05→.075; C8 Music .30→.2625 | C8 was isolated post hoc after C7 and failed the strict gate; tied C3 on the server |
+| C9 conditional Music | Music EER .30, worse than C8's .2625 | I stopped adjusting conditions on the existing 200 examples |
+| C10 equal-weight logit mean of C8/C5/V5 | EER .275, AUC .78015625 | Only the AUC gain remained; a three-way average is the exact formula |
+| C12 event max | File .1296703→.1445055 | No gain from recombining existing scores |
+| REAL-only PPCA32 | Fit on 226 actual REAL examples, small24 EER .5/AUC .486111 | Execution succeeded, but the signal failed |
+| C13 CQT-Cepstrum CNN | small40 EER .35, C8 .20 | I actually rejected it after confirming it was a different model from the early linear Fourier model |
+| AFSS/QAMO | RADAR24 EER .5/.5, respectively | Actual strict-load and forward passes succeeded; small-panel performance and rights limitations remained |
+| AntiDeepfake-Small | RADAR24 .25, ITW20 File .40 (C2 .30) | I do not generalize this ITW figure into Voice-authenticity performance |
+| EfficientAT presence | 2,212-row CPS .9888334505→.9882881955 | It completed after the initial ABI preparation failure; I kept PANNs |
 
-Nes2Net-X는 후속 감사에서 중요한 target 해석 오류가 확인됐다. ITW20의 Voice는 전부 REAL이고 파일 FAKE는 음악에서 왔다. File EER .50은 실제 결과지만 Voice EER은 한 클래스여서 정의할 수 없다. “Voice 일반화 실패”로 확대했던 해석을 정정한다. RADAR24 EER .25와 권리 문제는 별개의 약점으로 남는다. raw 음성을 다시 쓰는 아이디어 전체가 기각된 것도 아니다. 훗날 C232는 raw/stem의 기존 event 확률 max라는 다른 결합으로 일부 이득을 얻었다.
+A later audit identified an important target-interpretation error for Nes2Net-X. All Voice in ITW20 was REAL, and the FAKE file labels came from Music. File EER .50 was an actual result, but Voice EER was undefined because there was only one class. I corrected the interpretation that had expanded this into a "Voice generalization failure." RADAR24 EER .25 and rights issues remained separate weaknesses. Nor did this reject the entire idea of reusing raw Voice. Later, C232 obtained some gains through a different combination: taking the maximum of existing raw/stem event probabilities.
 
-근거: `research/v6_file_fusion_itw/FULL_400_V4_2_DEVELOPMENT_RESULT_AUDIT_2026-09-02.md` §6~8; `docs/FAST_LEADERBOARD_PROBES_2026-09-03.md`; `docs/C3_FOLLOWUP_AND_C8_NEXT_SUBMISSION_2026-09-04.md`; `research/v22_c3_residual_scout/C10_MUSIC_FIXED_LOGIT_CONSENSUS_DECISION_2026-09-04.md`; `research/v17_afss_fast_probe_v0_1/AFSS_FAST_PROBE_REJECTION_2026-09-03.md`; `research/v18_qamo_fast_probe_v0_1/QAMO_BATCH24_STOP_2026-09-03.md`; `research/v19_antideepfake_small_fast_probe_v0_1/ANTIDEEPFAKE_SMALL_FAST_GATE_DECISION_2026-09-04.md`; C369 감사 §1~3.
+Evidence: `research/v6_file_fusion_itw/FULL_400_V4_2_DEVELOPMENT_RESULT_AUDIT_2026-09-02.md`, Sections 6-8; `docs/FAST_LEADERBOARD_PROBES_2026-09-03.md`; `docs/C3_FOLLOWUP_AND_C8_NEXT_SUBMISSION_2026-09-04.md`; `research/v22_c3_residual_scout/C10_MUSIC_FIXED_LOGIT_CONSENSUS_DECISION_2026-09-04.md`; `research/v17_afss_fast_probe_v0_1/AFSS_FAST_PROBE_REJECTION_2026-09-03.md`; `research/v18_qamo_fast_probe_v0_1/QAMO_BATCH24_STOP_2026-09-03.md`; `research/v19_antideepfake_small_fast_probe_v0_1/ANTIDEEPFAKE_SMALL_FAST_GATE_DECISION_2026-09-04.md`; C369 audit, Sections 1-3.
 
-### 2.5 C26~C52: 작은 포렌식 특징의 성공과 결합 경로의 중요성
+### 2.5 C26-C52: Small Forensic Features Worked, but Their Fusion Path Mattered
 
-위상·coherence(C27)는 Fourier 단독 EER .326389→.298611의 신호가 있었으나 triad 전면 교체는 .215278→.229167로 나빠졌다. 초기 allfit score leakage·cross-fold pair 통계 문제를 수정했고, sentinel 중단 뒤에도 추가 실제 탐색평가가 존재한다. C28 multiscale292는 overlap .55→.35 개선, clean .50 동점이었지만 clean AUC .545→.4975 때문에 당시 기준에서 종료됐다. 두 후보를 미실행 또는 무신호라고 정리하면 부분 성과를 잃는다.
+Phase/coherence features (C27) showed a signal, improving standalone Fourier EER from .326389 to .298611, but replacing the full triad worsened EER from .215278 to .229167. I fixed the initial allfit-score leakage and cross-fold pair-statistics issues, and additional actual exploratory evaluations exist even after the sentinel stop. C28 multiscale292 improved overlap EER from .55 to .35 and tied clean EER at .50, but I stopped it under the criteria then in force because clean AUC fell from .545 to .4975. Describing either candidate as unexecuted or entirely without signal would erase these partial results.
 
-C29는 16/8/4kHz LPC 예측 잔차441차원의 logistic head다. 중앙4초를 읽으며 전체 파일의 모든 창을 처리하는 모델은 아니다. 첫 fold clean/overlap EER .40/.35, 독립 fold1 .2450/.2236이었다. Fourier와 고정50:50 logit 결합은 fold1 clean .1168→.0955, overlap .1382→.0955였으나 fold0에서는 C29 단독보다 나빴다. 전체620원천×clean/overlap=1,240실제 입력으로 최종 head를 학습했고 서버 ADS .7908095238로 C3 대비 +.0017142857이었다.
+C29 was a logistic head over 441 dimensions of LPC prediction residuals at 16/8/4kHz. It read the central four seconds; it did not process every window across an entire file. Its first-fold clean/overlap EER was .40/.35, and independent fold1 EER was .2450/.2236. A fixed 50:50 logit combination with Fourier improved fold1 clean EER from .1168 to .0955 and overlap EER from .1382 to .0955, but was worse than C29 alone on fold0. I trained the final head on all 620 sources x clean/overlap=1,240 actual inputs. Server ADS reached .7908095238, +.0017142857 over C3.
 
-C46은 서버 값으로 비중을 맞추지 않고 공개 source-held folds1~5의10cell에서 alpha {0,.25,.5,.75,1}을 비교했다. alpha .25의 macro EER .1476381254가 .50의 .1607864302보다 낮아 Fourier .75/LPC .25로 고정했다. 이것은 classical 슬롯의 OOF 근거이며 전체 Music160 또는 서버 EER이 아니다. 10cell 중6개 개선·2동점·2악화가 공존했다.
+For C46, I compared alpha {0,.25,.5,.75,1} across 10 cells in public source-held folds1-5 rather than fitting weights to server scores. Alpha .25 had macro EER .1476381254, lower than .50's .1607864302, so I fixed Fourier at .75 and LPC at .25. This was OOF evidence for the classical slot, not an EER for all of Music160 or the server. Of the 10 cells, six improved, two tied, and two worsened.
 
-C31~C34는 새 encoder 없이 C3의 시간 모양·순위·EER 경계 잔차를 학습하는 연속 가설이었다. C31은 temporal-partial File EER .283333→.216667이지만 전체 .1296703297→.1406593407로 악화했다. C32 shape-only 순위 잔차, C33 boundary-weighted 순위 잔차, C34 EER-boundary 잔차는 전체 EER .1296703297 동점이었다. AUC는 조금 올라가도 C33/C34의 temporal-partial EER은 .30으로 나빠졌다. 네 후보 모두 `STOP_NO_RECOMMENDED_SUBMISSION_ZIP`이며 시간 구조를 학습했다는 사실과 전체 EER 개선을 구분한다. 근거는 각 `research/v31_temporal_c3_residual_probe/`, `research/v32_temporal_c3_shape_rank/`, `research/v33_temporal_c3_boundary_rank/`, `research/v34_temporal_c3_eer_boundary/`의 `*_PUBLIC_DEVELOPMENT_RESULT.v1.json`에 있는 `c3_outer_oof`, `candidate_outer_oof`, `status`다.
+C31-C34 were successive hypotheses that learned residuals from C3's temporal shape, ranking, and EER boundary without adding an encoder. C31 improved temporal-partial File EER from .283333 to .216667, but worsened overall EER from .1296703297 to .1406593407. C32 shape-only ranking residuals, C33 boundary-weighted ranking residuals, and C34 EER-boundary residuals all tied overall EER at .1296703297. Although AUC increased slightly, temporal-partial EER worsened to .30 for C33/C34. All four candidates were marked `STOP_NO_RECOMMENDED_SUBMISSION_ZIP`; learning temporal structure must be distinguished from improving overall EER. The evidence is in `c3_outer_oof`, `candidate_outer_oof`, and `status` in the `*_PUBLIC_DEVELOPMENT_RESULT.v1.json` files under `research/v31_temporal_c3_residual_probe/`, `research/v32_temporal_c3_shape_rank/`, `research/v33_temporal_c3_boundary_rank/`, and `research/v34_temporal_c3_eer_boundary/`, respectively.
 
-동시에 실행한 대안들은 다음과 같다. C30 SONICS384+Deezer128 frozen 표현은 Windows selector 오류를 우회한 뒤 clean/overlap EER .416667, overlap AUC .569444로 실제 종료했다. C35 LPC 다중 crop은 Music .35→.3625로 악화했다. C36 LPC 직접 File과 C37 Fourier 직접 File은 각200/200 공개 분할에서 모두 EER .3703296703이었다. C38 MERT-v0의 mean+std1536 head는 all EER .375, C39 소형 logmel CNN은 학습 정확도 거의1에도 held EER .55로 과적합했다. C40 Sara wav2vec2는 대부분 spoof1에 포화돼24행 EER .416667이었다. C41 CLAP은 overlap EER .35로 gate 실패, C42 공개 GTZAN/Suno CNN은 AUC .333125/EER .625로 실패했고 임의 부호 반전도 하지 않았다. C43 SONAR는 이전 실패 checkpoint와 동일하여 재실행하지 않았다. C44 Eliya Base는 RADAR24 AUC .958333에도 EER .166667로 기존 OC .083333보다 약했다. C45 Echoes는 REAL 음원0, 불완전 reference 매핑·권리 자료 때문에 학습 전 중단했다. C47 재검색은 동일 실패/HOLD 또는 실행 가능한 근거 부족으로 다운로드·추론 없이 끝났다.
+I also ran the following alternatives during this period. C30's frozen SONICS384+Deezer128 representation reached an actual stopping result after I worked around a Windows selector error: clean/overlap EER .416667 and overlap AUC .569444. C35 multi-crop LPC worsened Music from .35 to .3625. Direct-to-File LPC in C36 and direct-to-File Fourier in C37 each produced EER .3703296703 on their respective public 200/200 splits. C38's MERT-v0 mean+std1536 head had overall EER .375; C39's small logmel CNN overfit, with held EER .55 despite training accuracy near 1. C40 Sara wav2vec2 saturated near spoof1 on most examples and had 24-row EER .416667. C41 CLAP failed the gate with overlap EER .35. C42, a public GTZAN/Suno CNN, failed with AUC .333125/EER .625, and I did not arbitrarily reverse its sign. C43 SONAR was the same checkpoint that had already failed, so I did not rerun it. C44 Eliya Base had RADAR24 AUC .958333 but EER .166667, weaker than the existing OC's .083333. I stopped C45 Echoes before training because it had zero REAL audio files, incomplete reference mappings, and incomplete rights documentation. C47's renewed search ended without downloading or inference because the results were the same failed/HOLD candidates or lacked sufficient evidence for an executable path.
 
-C48은 바뀐 C46 음악 점수에 옛 C3 File 계수를 유지한 불일치를 점검해 File EER .1703296703→.1554945055를 얻었지만 bootstrap .383301로 보류했다. C49 직접6입력 File은 의도한 C46 대신 C3를 기준으로 비교한 오류가 있었다. 올바른 C46로 정정해도 후보 EER .189011로 악화였으므로 성공 모델을 숨긴 오류는 아니었다. C50의8입력 계획은 변하는 보고서 SHA/크기를 실행 필수조건에 묶어 막혔고 C51 뒤 취소돼 fit·EER0회다. 성능 실패가 아닌 미평가로 남긴다.
+C48 investigated the mismatch caused by retaining old C3 File coefficients after changing Music scores in C46. File EER improved from .1703296703 to .1554945055, but I held it because the bootstrap result was .383301. C49's direct six-input File experiment mistakenly compared against C3 instead of the intended C46. Correcting the reference to C46 still left the candidate worse at EER .189011, so the error did not conceal a successful model. C50's eight-input plan was blocked because execution prerequisites depended on a report SHA/size that kept changing. I canceled it after C51, with zero fits and zero EER evaluations. I record it as unevaluated, not a performance failure.
 
-C51은 File 음악-event head에 C46 global Music, presence, aligned Music, raw Fourier, raw C29의 다섯 logit을 전달했다. 공개 File EER .1703296703→.1445054945, bootstrap .6154785156였다. final 직접 C29 slope는0이지만 C29는 global/aligned 안에 남았다. 주된 변화는 raw Fourier가 다른 음악 전문가와 먼저 섞여 약해지지 않도록 File에 직접 전달된 점이다. 서버 ADS .7995952381로 이 계보의 새 기준점이 됐다. 반대로 C52는 File을3입력 C3 방식으로 돌리고 File용 classical도 raw Fourier로 복귀시켜 서버 ADS .7925238095로 나빠졌다. “C51 보존 개선”이라는 설명은 부정확하며, 여러 기존 정보가 바뀐 후보였다.
+C51 passed five logits to the File Music-event head: C46 global Music, presence, aligned Music, raw Fourier, and raw C29. Public File EER improved from .1703296703 to .1445054945, with bootstrap .6154785156. The final direct C29 slope was 0, but C29 remained inside global/aligned inputs. The main change was feeding raw Fourier directly to File so that its evidence was not weakened by prior fusion with other Music experts. Server ADS .7995952381 made C51 the new reference point in this lineage. In contrast, C52 returned File to the three-input C3 method and also returned its File-side classical input to raw Fourier, worsening server ADS to .7925238095. Describing it as an "improvement that preserved C51" was inaccurate; it changed several existing information paths.
 
-근거: 초기 회고 §14~16; `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md` §4~5; `research/c370_c29_c51_retrospective/C370_PROMISING_CANDIDATE_CODE_AUDIT_2026-09-10.md`; `submission_c51_uncompressed_file_music_src/C51_SUBMISSION_HANDOFF_2026-09-05.md`; `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md` §2~3.
+Evidence: early retrospective, Sections 14-16; `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md`, Sections 4-5; `research/c370_c29_c51_retrospective/C370_PROMISING_CANDIDATE_CODE_AUDIT_2026-09-10.md`; `submission_c51_uncompressed_file_music_src/C51_SUBMISSION_HANDOFF_2026-09-05.md`; `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, Sections 2-3.
 
-### 2.6 C53~C159: 작은 개발셋, 새 점수의 희석, 검증·제출 불일치
+### 2.6 C53-C159: A Small Development Set, Dilution of New Scores, and Validation/Submission Mismatches
 
-이 구간은 temporal Fourier, component calibration, local raw/stem consensus, presence/layout routing, raw Spectra/Voice 보완, 음악 해상도, stem 누출 완화, LBP texture 등으로 갈라졌다. 각 번호를 새로운 대형 모델 학습으로 세면 안 된다. C61~C88의 다수는 기존 점수·구간·특징의 배치와 결합을 바꾸는 가설이다. C71/C75는 공개 File 개선이 남았지만 bootstrap이 약했다. C71은 정확 Fourier vectorization으로60초30호출 약9배 속도를 얻은 뒤 재검토·패키징했고 공개 File EER .144505→.114835였으나 서버 ADS .7908095238로 C51보다 낮았다.
+This phase branched into temporal Fourier, component calibration, local raw/stem consensus, presence/layout routing, raw Spectra/Voice supplementation, Music resolution, stem-leakage mitigation, LBP texture, and related ideas. Each number must not be counted as a newly trained large model. Many C61-C88 hypotheses changed the arrangement and fusion of existing scores, intervals, and features. C71/C75 retained public File gains, but their bootstrap evidence was weak. I reconsidered and packaged C71 after exact Fourier vectorization delivered roughly a ninefold speedup for 30 calls over 60 seconds. Public File EER improved from .144505 to .114835, but server ADS .7908095238 was below C51.
 
-C58은 C52와 서버 동점이었지만 공개 캐시 재생에서 File200개 모두 바뀌고 최대 차이 .27569,539순위쌍 변화가 있었다. 연결이 죽은 버그라는 증거는 없었다. 실제 문제는 연구에서는 routed 입력에 맞춰 head를 재학습했으나 ZIP은 옛 C3 계수를 썼다는 계약 불일치다. 후속 C108에서 절차를 맞춰도 새 원천에서 oldC58와 music-event 순위가 같아 수정 재제출 근거를 얻지 못했다. 연구·배포 불일치를 인정하되 그것이 서버 실패의 유일한 원인이라고 하지 않는다.
+C58 tied C52 on the server, yet public cache replay changed all 200 File probabilities, with maximum difference .27569 and 539 changed ranking pairs. There was no evidence of a disconnected-path bug. The actual problem was a contract mismatch: research retrained the head for routed inputs, while the ZIP used the old C3 coefficients. Even after I aligned the procedures in C108, music-event rankings on new sources were identical to oldC58, so I obtained no basis for a corrected resubmission. I acknowledge the research/deployment mismatch without claiming it was the sole cause of the server failure.
 
-LBP472(C95)는6provider×2view 평균 EER .228753→.186764였다. codec·길이·overlap7,316뷰 증강(C100)은6provider×3view .222400→.173016으로 나아졌다. 그러나 C101에서 실제200에 적용하면 classical EER .2875→.2625여도 최종 File/Music EER은 같았다. C102가 직접 여섯 번째 File 입력으로 쓰면200개 확률이 바뀌고56오류쌍을 고치는 대신52쌍을 새로 깨뜨려 EER의 FP10/FN19가 유지됐다. LBP가 여러 결합을 지나는 logit 민감도 상한 약 .0386, global/aligned music 상관 .9563은 정보 희석과 중복의 구조적 근거였다. 그렇지만 전체 music-present160의 LBP AUC .493750도 확인돼 결합만 탓할 수 없었다.
+LBP472 (C95) improved mean EER across six providers x two views from .228753 to .186764. Codec, duration, and overlap augmentation to 7,316 views (C100) improved the six-provider x three-view result from .222400 to .173016. However, applying it to the actual 200 examples in C101 improved classical EER from .2875 to .2625 while leaving final File/Music EER unchanged. Using it as a direct sixth File input in C102 changed all 200 probabilities and corrected 56 erroneous pairs, but broke 52 new pairs, leaving the EER-point counts at FP10/FN19. An approximately .0386 upper bound on LBP's logit sensitivity through multiple fusion stages, together with global/aligned Music correlation .9563, provided structural evidence of dilution and redundancy. Nevertheless, LBP AUC on all 160 music-present examples was .493750, so I could not blame fusion alone.
 
-C90은 같은 목표의 학습 패널을400행으로 늘려 File EER .1445055→.1554945로 악화했다. C114/C118/C120 부분·국소 학습, C125 LPC 원천 추가, C126 직접 LBP File, C130 Deezer128 head 전이도 최종 이득을 확보하지 못했다. 특히 C131 기존 Music160에서 .325→.475인데 C132 별도64에서는 .315341→.223011이었다. 새 패널의 좋은 결과로 기존 혼합 조건 붕괴를 덮지 않았다. C134 독립 File, C135 real-only, C137 비선형 음악, C138 새 REAL source 학습도 EER 기준에서 전체 개선이 없었다.
+C90 expanded the training panel for the same target to 400 rows, worsening File EER from .1445055 to .1554945. Partial/local training in C114/C118/C120, added LPC sources in C125, direct LBP File in C126, and Deezer128 head transfer in C130 also failed to secure a final gain. In particular, C131 worsened the existing Music160 result from .325 to .475, while C132 improved a separate 64-example panel from .315341 to .223011. I did not let a good result on a new panel conceal the collapse on the existing mixture conditions. Independent File in C134, REAL-only modeling in C135, nonlinear Music in C137, and training on new REAL sources in C138 produced no overall EER improvement either.
 
-C159는 frozen Dasheng+자체 C151 head를 PANNs가 고른4초에 적용해 최종 Music과50:50 평균했다. 공개 Music160 .325→.2875, 별도 음악 source-proxy .315341→.184659였지만 독립160/64원천이 아니었고 혼합·일부 원천 악화와 bootstrap95%구간0 포함이 남았다. 서버 ADS .7781666667로 C51 대비 -.0214285714였다. 네 출력 보존 전제에서는 Music EER 약 .0714285713 악화다. 실행 성공과 일반화 성공을 혼동한 제출 권고 실패로 기록했으며 단순 alpha 수정으로 이어가지 않았다.
+C159 applied frozen Dasheng plus my C151 head to a four-second segment selected by PANNs, then averaged it 50:50 with final Music. Public Music160 improved from .325 to .2875, and a separate Music source proxy improved from .315341 to .184659. However, these were not 160/64 independent sources; mixture and some source conditions worsened, and the 95% bootstrap interval included 0. Server ADS was .7781666667, -.0214285714 relative to C51. Assuming the other four outputs were preserved, this implied approximately .0714285713 deterioration in Music EER. I recorded this as a failed submission recommendation that confused successful execution with successful generalization, and did not follow it with a simple alpha adjustment.
 
-근거: `docs/RESEARCH_RESUME_STATUS_2026-09-06.md`, `docs/RESEARCH_RESUME_STATUS_2026-09-07.md`, `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md` §2~5, `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md` 첫 두 절.
+Evidence: `docs/RESEARCH_RESUME_STATUS_2026-09-06.md`; `docs/RESEARCH_RESUME_STATUS_2026-09-07.md`; `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, Sections 2-5; the first two sections of `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`.
 
-### 2.7 C162~C241: 실제 자료와 전문가를 학습하고, 쓰이는 위치를 바꿨다
+### 2.7 C162-C241: I Trained Experts on Actual Material and Changed Where I Used Them
 
-C159 이후 frozen 표현의 head 반복만으로는 부족하다고 보고 Deezer 마지막 Conv+dense/output을 학습했다. C166 기존 자료, C169 MusicGen60원천 추가, C174 Fourier+LPC source expansion, C178 고정 평균은 일부 held 개선에도 C51 공개 전체를 이기지 못했다. C171 segment mean→max는 Music160 .425→.3625와 순차 .30→.15의 이득 대신 overlap .50→.55와 새 원천 오탐을 만들었다. 시간상 짧은 fake 희석과 REAL 최대값 오탐이 함께 존재했다.
+After C159, I concluded that repeatedly training heads on frozen representations was insufficient and trained Deezer's final convolution plus dense/output layers. C166 on existing material, C169 with 60 additional MusicGen sources, C174's Fourier+LPC source expansion, and C178's fixed average failed to beat C51 on the full public evaluation despite some held-out gains. Changing segment aggregation from mean to max in C171 improved Music160 from .425 to .3625 and sequential EER from .30 to .15, but worsened overlap from .50 to .55 and introduced false positives on new sources. Both dilution of temporally short fakes and REAL false positives from maximum aggregation were present.
 
-같은 음악에서 음성을 바꿨을 때 Music 점수가 움직이는 C175 음량통제16개 실험을 근거로, REAL/FAKE 음악 양쪽에 합성 음성을 대칭 추가했다. Kokoro stock8을 생성하고 음악764×2채널=1,528실제 파일을 만들었다. C180은 train3,690/held766으로 실제 tail 학습했다. oldheld500 EER .32393→.28405, 새held266 .39097→.34580이었지만 공개 Music160 .3875로 C51 .325보다 약했다. 음성 교체 signed평균은 줄어도 절댓값 평균은 .09035→.11551로 악화했으므로 불변성 확보라고 주장하지 않았다. raw용 모델에 Demucs 반주만 넣은 C181도 proxy EER .375→.75였다.
+In the 16-example, volume-controlled C175 experiment, Music scores moved when I changed the speech over the same music. Based on that evidence, I added synthetic speech symmetrically to both REAL and FAKE music. I generated Kokoro stock8 and created 764 music examples x two channels=1,528 actual files. C180 performed actual tail training with train3,690/held766. It improved oldheld500 EER from .32393 to .28405 and newheld266 from .39097 to .34580, but public Music160 EER .3875 was weaker than C51's .325. The signed mean effect of speech replacement decreased, but the mean absolute effect worsened from .09035 to .11551, so I did not claim invariance. C181, which fed only Demucs accompaniment to a model intended for raw audio, also worsened proxy EER from .375 to .75.
 
-전환은 단독 모델의 최종50% 혼합이 아니라 기존 전문가 내부 역할 교체에서 나왔다. C190은 C51 구조의 Deezer를 증강 학습 C180으로 바꾸고 직접 Fourier와 시간 정보는 보존해 서버 ADS .8085238095를 얻었다. C205는 같은3,690자료로9epoch 추가 학습해 held766 .3093→.2259였다. 그러나 단독 교체 C208은 Music .300→.2875에도 File .1445→.1555로 악화했다. C210은 같은 창의 C180/C205 확률을 반반 평균했고 C209는 간접 C29 자리의 작은 Dasheng 역할을 시험했다. 둘을 실제 결합한 C212는 Music .25, File OOF .140659였고 서버 .8102380952였다. 유효 logit 비중은 SONICS25%, dual Deezer37.5%, Fourier28.125%, Dasheng9.375%였으며 직접 File C29는 보존됐다.
+The turning point came from replacing an existing expert's internal role rather than giving a standalone model a final 50% blend. C190 replaced Deezer within the C51 structure with the augmentation-trained C180, preserving direct Fourier and temporal information, and reached server ADS .8085238095. C205 trained for nine additional epochs on the same 3,690 examples, improving held766 EER from .3093 to .2259. However, its standalone replacement in C208 improved Music from .300 to .2875 while worsening File from .1445 to .1555. C210 averaged C180/C205 probabilities equally within the same window, while C209 tested a small Dasheng role in the indirect C29 slot. C212 actually combined both changes, achieving Music .25, File OOF .140659, and server ADS .8102380952. Effective logit weights were SONICS25%, dual Deezer37.5%, Fourier28.125%, and Dasheng9.375%, while direct File C29 was preserved.
 
-C211 더 깊은 convolution 학습, C222 국소 라벨 학습, C223 전화 Fourier, C226/C228 순위손실은 EER 개선을 확보하지 못했다. C229 음량 표준화는 File 악화, C231 촘촘한 Fourier는 File 일부 이득과 Music .25→.275 손실이 충돌했다. C238 신경 codec 복원·토큰요약81차원 head는 held64 .21875→.46875로 약했다. 실행한 학습과 성능 실패를 남기고 추가 대규모 확대는 하지 않았다.
+Deeper convolution training in C211, local-label training in C222, telephone Fourier in C223, and ranking losses in C226/C228 did not secure EER improvements. C229's volume normalization worsened File. C231's denser Fourier sampling produced some File gains at the cost of Music worsening from .25 to .275. C238's 81-dimensional head over neural-codec reconstruction and token summaries was weak, worsening held64 from .21875 to .46875. I retained the records of actual training and performance failure without expanding those approaches substantially further.
 
-C241에서는 PANNs 음악 존재확률로 Deezer 창 평균을 가중한 C239와, 원음/분리음성의 기존 voice-event 중 큰 값을 File에만 쓰는 C232를 결합했다. 공개 Music160 .25→.2375, 순차 Music .20→.10, File200 .140659→.129670이었다. 별도16 File은 .25 동점이며 bootstrap95%구간은0을 포함했다. 각각의 File 개선폭이 결합에서 더해졌다는 근거는 없었다. 서버 ADS .811452381,26분02초로 소폭 개선됐다.
+C241 combined C239, which weighted the Deezer window average by PANNs Music-presence probabilities, with C232, which used the larger of the existing raw-audio/separated-Voice events for File only. Public Music160 improved from .25 to .2375, sequential Music from .20 to .10, and File200 from .140659 to .129670. The separate File16 panel tied at .25, and the 95% bootstrap interval included 0. There was no evidence that the individual File improvements added together in the combination. Server ADS improved slightly to .811452381, with runtime 26m02s.
 
-근거: `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md` 후속 완료 절; `docs/C190_TO_C212_RESEARCH_2026-09-08.md` §3~7; `docs/RESEARCH_RESUME_STATUS_2026-09-09.md`; `docs/C241_RESEARCH_AND_SUBMISSION_2026-09-09.md`.
+Evidence: follow-on completion sections in `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`; `docs/C190_TO_C212_RESEARCH_2026-09-08.md`, Sections 3-7; `docs/RESEARCH_RESUME_STATUS_2026-09-09.md`; `docs/C241_RESEARCH_AND_SUBMISSION_2026-09-09.md`.
 
-### 2.8 C242~C349: 추가 학습의 반복 실패 뒤, 외부 Music과 File 결합을 분리했다
+### 2.8 C242-C349: After Repeated Failures in Further Training, I Separated External Music Fusion from File Fusion
 
-C241 이후에는 source-paired JS, provider 균형, 더 깊은 CNN, codec 증강, 원천/시간 crop 확대, MuQ·MERT·PANNs·Spectra 표현, SONICS 적응, real-only density, 비선형 head, 긴 시간 관측 등 여러 축을 실제로 검토했다. 아래는 동일 baseline과 비교 범위가 확인된 대표 결과다. 모두 공개 결과이며 서로 다른 행의 수치를 평균하거나 서버 예상치로 더하지 않는다.
+After C241, I actually examined source-paired JS, provider balancing, deeper CNNs, codec augmentation, expanded sources/temporal crops, MuQ/MERT/PANNs/Spectra representations, SONICS adaptation, REAL-only density, nonlinear heads, and longer temporal observations. The table below lists representative results for which the baseline and comparison scope were established. All are public results; I do not average numbers across different rows or add them together as an expected server gain.
 
-| 시도 | 실제 관측과 종료 이유 |
+| Attempt | Actual observation and reason for stopping |
 |---|---|
-| C246/C249 paired-JS | held766 EER .225889 동점; 실제280 최종 Music/File도 동점 |
-| C248 presence 열 제거 | old File .129670→.114835지만 별도 File16 .25→.291667 악화 |
-| C245 codec token histogram | held64 .21875→.53125, 작은 표현 실패 |
-| C251 MuQ source expansion | TRAIN3690/held766, EER .276809(C205 .225889); MusicGen 일부 보완만 남음 |
-| C255 MuQ 직접 File | held File .264915, old200 전이 .429670; 목표별 head가 필요해도 성능 충분하지 않음 |
-| C265/C267/C278 MuQ MLP·규제선택·RBF | MLP .302823, RBF .289816; TRAIN-only 규제선택도 C=.01 유지 |
-| C269/C272 SONICS tail | raw held .468590→.349938, 최종 File .129670→.144505 악화 |
-| C274/C276/C277 | 마지막2conv, 새MusicArena32, 시간crop2524를 각각 시험; held .232392/.232392/.245399로 기준 .225889 열세 |
-| C285 scratch residual CNN | held .484295, 학습상 개선과 source 일반화 괴리 |
-| C290 REAL-only SpecNF | REAL1734뷰4epoch, held .398160; 정상 density/논문 재현 주장도 제한 |
-| C291 MP3/Opus 증강 | TRAIN7380, 원held .225889→.238896; 확장codec held .224540→.231043 |
-| C293/C297 SONICS stem/full fine-tune | 소형 stem held EER .5 동점; full fine-tune held64 .46875로 C205 .21875 열세 |
-| C294/C295/C299 표현 진단 | PANNs .40625; Spectra 마지막160D .21875 동점이나 원 scalar와 순위 동일; 중간6층 .46875 |
-| C301/C330 REAL 원천 확대 | 73곡/65곡 추가 후 held .232392/.235091; 단순 자료 증가 효과 없음 |
-| C331/C334/C344 | 같은자료 추가9epoch .232392, BN통계 교정 .267608, matched SAM .229694 vs PLAIN .225889 |
-| C329 MERT-v1 | held64 .4375; 기존v0와 다른 checkpoint를 실제 시험했으나 전체 열세 |
-| C335/C338 dense Deezer | 단독 .235385→.202564에도 최종 Music 동점; aligned/event는 악화 또는 복원만 |
-| C336/C339 연속4초 문맥 | 기존6개의 .78초 창 대신 연속4초; 무적응/소형적응 모두 held64 .25, 기준 .21875보다 약함 |
+| C246/C249 paired JS | held766 EER tied at .225889; final Music/File on 280 actual examples also tied |
+| C248 removed the presence column | old File .129670→.114835, but separate File16 worsened .25→.291667 |
+| C245 codec-token histogram | held64 .21875→.53125; the small representation failed |
+| C251 MuQ source expansion | TRAIN3690/held766, EER .276809 (C205 .225889); only some MusicGen complementarity remained |
+| C255 MuQ direct File | held File .264915, transfer to old200 .429670; performance was insufficient even if target-specific heads were needed |
+| C265/C267/C278 MuQ MLP, regularization selection, and RBF | MLP .302823, RBF .289816; TRAIN-only regularization selection also retained C=.01 |
+| C269/C272 SONICS tail | raw held .468590→.349938, but final File worsened .129670→.144505 |
+| C274/C276/C277 | Tested the last two convolutions, new MusicArena32, and 2,524 temporal crops, respectively; held .232392/.232392/.245399, all weaker than the .225889 baseline |
+| C285 residual CNN from scratch | held .484295; training improvements did not transfer to source generalization |
+| C290 REAL-only SpecNF | Four epochs over 1,734 REAL views, held .398160; claims of normal density modeling or paper reproduction were also limited |
+| C291 MP3/Opus augmentation | TRAIN7380, original held .225889→.238896; expanded codec held .224540→.231043 |
+| C293/C297 SONICS stem/full fine-tuning | Small stem panel held EER tied at .5; full fine-tuning held64 .46875, weaker than C205 .21875 |
+| C294/C295/C299 representation diagnostics | PANNs .40625; Spectra's final 160D tied at .21875 but had the same ranking as its original scalar; six intermediate layers .46875 |
+| C301/C330 REAL source expansion | After adding 73/65 tracks, held .232392/.235091; simply adding material did not help |
+| C331/C334/C344 | Nine more epochs on the same material .232392, BN-statistics correction .267608, matched SAM .229694 versus PLAIN .225889 |
+| C329 MERT-v1 | held64 .4375; I actually tested a different checkpoint from the earlier v0, but it was weaker overall |
+| C335/C338 dense Deezer | Despite standalone .235385→.202564, final Music tied; aligned/event paths worsened or only recovered |
+| C336/C339 continuous four-second context | Replaced the existing six .78-second windows with four continuous seconds; both unadapted and lightly adapted versions had held64 .25, weaker than baseline .21875 |
 
-이 시기의 구현 수정도 기록을 정리할 때 사라지면 안 된다. C269는 원 SONICS의 pad 후 표준편차 정규화를 smoke에서 빠뜨린 것을 fit 전에 발견해 캐시를 새로 생성했다. C274는 학습 실패가 아니라 단일클래스 NaN의 JSON 저장 실패였고 저장 예측으로 보고서를 복구했다. C295는 모든 feature가 다르고 원 logit 재생도 일치했지만 TRAIN 표현의 top2 주성분이97.02%여서 새 head가 실제 새로운 순위를 만들지 못했다. C334의 BN shape·JSON 오류도 보존했으나 정상 계산 뒤 성능 악화라는 결론은 유지했다. 문서의 준비/실행중 문장을 최종 실패 기록보다 우선하면 중복 실험을 하게 된다.
+Implementation corrections from this period must also survive the retrospective. In C269, I discovered before fitting that the smoke test omitted the original SONICS normalization by standard deviation after padding, so I regenerated the cache. C274 was not a training failure; JSON saving failed on a single-class NaN, and I recovered the report from saved predictions. In C295, all features differed and replay matched the original logit, but the top two principal components of the TRAIN representation explained 97.02%, so the new head did not actually create a new ranking. I also retained C334's BN-shape and JSON errors, but the conclusion remained that performance worsened after correct computation. Treating earlier "preparing" or "running" statements as more authoritative than the final failure records would lead to duplicate experiments.
 
-마지막 변화는 전문가를 더 추가하기보다 이미 달라진 S/D/F/H 비중을 공개 자료로 다시 학습한 C342/C346이었다. C342 nested OOF는 Music160 .2375→.2625, File200 .129670→.144505로 실패했다. 다만 heldfold Music4동점/1개선의 신호를 바탕으로 사후 제한 전이 진단 C346을 허용했다. Music160에서 균등5fold, lambda {.01,.1,1}, 평균EER 최소·동점 강정규화로 lambda .1을 정하고 전체160에 한 번 fit했다. S/D/F/H 고정 비중은 약 0/.4752857123/.3127043354/.2120099524였다. 이160은 이제 실제 계수 학습 자료여서 final head의 독립 성능으로 보고하지 않는다.
+The final change was C342/C346, where I retrained the already-changed S/D/F/H weights on public material rather than adding another expert. C342 nested OOF failed: Music160 worsened from .2375 to .2625 and File200 from .129670 to .144505. However, a signal of four ties and one improvement across held-fold Music results led me to allow the limited post hoc transfer diagnostic C346. On Music160, I used five equal folds and lambda {.01,.1,1}, selecting lambda .1 by minimum mean EER with stronger regularization as the tie-break, then fitted once on all 160 examples. Fixed S/D/F/H weights were approximately 0/.4752857123/.3127043354/.2120099524. These 160 examples had now become actual coefficient-training material, so I do not report them as independent performance evidence for the final head.
 
-동결 비중의 전이는 C254128에서 Music-source EER .21875→.1875, novel64 .235384615385→.124102564103, C14916 .375→.25였다. 그러나 C254 short-partial .4375는 동점이고8source block 중2개는 악화했다. novel45초의 EER0은 REAL3/FAKE7의10행뿐이다. C149 실제 File16은 .25 동점이며 음악-event proxy는 .25→.375로 악화했다. C254 실제 길이는4초32개+12초96개로, 예전4/8초 설명을 정정했다. novel/C149 및 C254 사이 공유 부모도 있어 독립208원천이라고 부를 수 없다.
+Transfer of the frozen weights improved Music-source EER on C254128 from .21875 to .1875, on novel64 from .235384615385 to .124102564103, and on C14916 from .375 to .25. However, C254 short-partial tied at .4375, and two of eight source blocks worsened. EER0 for novel 45-second audio came from only 10 rows: three REAL and seven FAKE. Actual File16 on C149 tied at .25, while its Music-event proxy worsened from .25 to .375. C254's actual durations were 32 four-second and 96 twelve-second examples, correcting the earlier four/eight-second description. Shared parents also existed between novel/C149 and C254, so these cannot be called 208 independent sources.
 
-그래서 C349는 외부 `MUSIC_FAKE_PROB`만 새 비중으로 계산하고 File에는 원 C241의 global/aligned 음악값을 유지했다. SONICS 비중이 외부 Music에서 거의0이어도 File의 SONICS 경로는 제거하지 않았다. 이 범위 선택은 공개 결과를 본 뒤의 판단이며 독립 확증은 아니다. 실제 모든 모델→CSV 직렬 CPU 검증과 네 출력 exact 보존을 확인한6.23GB ZIP을 만들었고 서버는25분46초, ADS .8157380952로 C241 대비 약 +.0042857142였다. 이는 File에 외부 Music의 최적 비중을 그대로 이식할 필요가 없다는 실전 사례다. 당시 목표 .83에는 못 미쳤고 이후 연구로 이어졌다.
+For that reason, C349 computed only the external `MUSIC_FAKE_PROB` with the new weights and kept C241's original global/aligned Music values for File. Although SONICS had nearly zero weight in external Music, I did not remove the SONICS path inside File. I chose this scope after viewing public results; it was not independent confirmation. I built a 6.23GB ZIP after actual serial CPU validation from all models through CSV and exact-preservation checks for the other four outputs. The server runtime was 25m46s, and ADS .8157380952 was approximately +.0042857142 over C241. This was a practical example of why the best external Music weights did not have to be transplanted unchanged into File. It remained below my target of .83 at the time, and I continued the research.
 
-근거: `docs/RESEARCH_RESUME_C241_SERVER_2026-09-09.md`의 각 완료 절; `docs/C349_C346_MUSIC_ONLY_REPORT_2026-09-09.md`의 「공개 결과 — 개선과 반례를 함께 보존」 및 서버 결과 추가.
+Evidence: the individual completion sections in `docs/RESEARCH_RESUME_C241_SERVER_2026-09-09.md`; "Public Results—Preserving Both Improvements and Counterexamples" and the server-results addendum in `docs/C349_C346_MUSIC_ONLY_REPORT_2026-09-09.md`.
 
-### 2.9 이 구간에서 보존해야 할 해석
+### 2.9 Interpretations I Need to Preserve from This Period
 
-가장 큰 초기 성과는 V5의 독립 음악 관측, C2/C3의 File 결합, C51의 직접 Fourier, C190/C212의 학습 전문가와 내부 역할, C241의 관측 구간, C349의 출력별 결합 분리였다. 반대로 새 모델 단독 개선은 최종 조합의 개선을 보장하지 않았고, 파일 수 증가는 독립 원천 증가와 달랐다. 새 확률이 실제 CSV에 반영돼도 EER이 같을 수 있었으며, 그 사실을 연결 버그로 단정하지 않았다.
+My largest early gains came from V5's independent Music observations, C2/C3's File fusion, C51's direct Fourier input, C190/C212's trained experts and their internal roles, C241's observation intervals, and C349's separate fusion by output. Conversely, improving a new model alone did not guarantee improvement in the final combination, and a larger file count was not the same as more independent sources. New probabilities could reach the actual CSV while EER stayed unchanged; I did not automatically interpret that as a disconnected-path bug.
 
-초기 `telephone_g711` 이름은 실제8k 전화대역을 뜻하지 않았다. 원 development200은16kHz PCM μ-law encode/decode만 수행했다. 후속 true8k 패널과 나눠 보고해야 하며 실제 통신망 일반화를 입증하지 않는다. 공개17domain voice 점수도200만개 보존 WAV나 실제 혼합 검증을 뜻하지 않는다. 코드 오류, 권리/재현성 중단, 미평가, 실제 성능 실패, 부분 신호, 제한 제출 성공을 각각 남겨야 시행착오 기록이 재사용 가능해진다.
+The early name `telephone_g711` did not mean an actual 8k telephone band. Original development200 performed only 16kHz PCM mu-law encoding/decoding. I must report it separately from the later true8k panel; it does not establish generalization to real telecommunications networks. The public 17-domain Voice scores also do not represent two million preserved WAV files or actual mixture validation. Preserving the distinctions among code errors, rights/reproducibility stops, unevaluated plans, actual performance failures, partial signals, and limited submission successes is what makes this record of trial and error reusable.
 
-근거: `docs/DEVELOPMENT_CHANNEL_SEMANTICS_CORRECTION_2026-09-10.md`; `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md`; `docs/PAST_EXPERIMENT_IMPLEMENTATION_AUDIT_2026-09-10.md`; `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`.
+Evidence: `docs/DEVELOPMENT_CHANNEL_SEMANTICS_CORRECTION_2026-09-10.md`; `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md`; `docs/PAST_EXPERIMENT_IMPLEMENTATION_AUDIT_2026-09-10.md`; `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`.
 
-## 3. C350–C660 — 모델의 개선을 최종 File 판단까지 전달하기
+## 3. C350–C660 — carrying model improvements through to the final File decision
 
-이 구간의 중심 질문은 “어떤 탐지기를 더 학습할 것인가”에서 “이미 얻은 탐지 신호가 최종 판단의 어느 단계에서 사라지는가”로 바뀌었다. C349를 기준으로 공동 File 판별기, 음성 모델 적응, 음악 원천 확장, 부분 위조 학습, 시간 attention, EAT 표현과 대형 모델을 차례로 시험했다. 실제 학습과 공개 검증까지 완료한 후보 중에도 최종 결합에서는 동률이거나 악화하는 경우가 많았다. 최종적으로 C660은 새 신경망을 추가하지 않고 기존 음악 증거가 File에 전달되는 입력 한 곳을 바꾸어 사용자 보고 서버 ADS를 C596의 0.8174523810에서 0.8274523810으로 올렸다.
+During this period, my central question shifted from “Which detector should I train next?” to “Where do the detection signals I already have disappear before the final decision?” Starting from C349, I tested a joint File classifier, voice-model adaptation, broader music sources, partial-fake training, temporal attention, EAT representations, and larger models. Many candidates that completed actual training and public validation still tied or regressed in the final combination. Ultimately, C660 added no new neural network: I changed one input through which existing music evidence reached File, raising my recorded server ADS from C596's 0.8174523810 to 0.8274523810.
 
-여기의 공개 EER은 대체로 음악 또는 음성의 **원천 진위를 대리 정답으로 삼은 개발 지표**다. 보컬과 반주의 성분 정답이 모두 확정된 대회 지표, 공식 ADS, 서버 성능과 동일하지 않다. `OOF`도 어떤 모델을 어떤 원천 단위로 제외했는지에 따라 의미가 다르다. 음향 모델 전체가 미관측인 검증과 고정된 음향 점수 위의 결합기만 원천을 제외해 학습한 검증을 구별했다. 숫자가 큰 패널도 같은 부모의 반복 변형일 수 있으므로 아래에서는 행 수와 실제 원천 수를 함께 적는다.
+The public EER values here are generally **development metrics using the authenticity of a music or voice source as a proxy label**. They are not equivalent to competition metrics with confirmed component labels for both vocals and accompaniment, official ADS, or server performance. The meaning of `OOF` also depends on which model excluded which source units. I distinguished validation in which the entire acoustic model had not seen the evaluated sources from validation in which only a combiner over fixed acoustic scores excluded those sources during training. Even a large panel can consist of repeated transformations of the same parents, so I report both row counts and actual source counts below.
 
-### 3.1 C413: 좋은 작은 공동 판별기가 기존 구조를 대체할 충분한 증거는 아니었다
+### 3.1 C413: A Good Small Joint Classifier Was Not Sufficient Evidence to Replace the Existing Structure
 
-C350 이후에는 C349의 외부 Music 개선과 별개로 남아 있던 File 오류를 줄이려 했다. 여러 전역·시간·음성 사건 결합을 거쳐 C412는 10개 고정 특징에서 음성 사건과 음악 사건을 함께 학습하는 12계수 모델이 됐다. Voice와 Music의 BCE를 유지하고 File BCE만 class/source 균형을 반영한 pairwise logistic ranking으로 바꿨다. 이는 불연속 EER 자체를 직접 최적화한 방법은 아니며, REAL보다 FAKE의 File 점수가 높도록 유도한 순위 목적함수였다.
+After C350, I tried to reduce File errors that remained despite C349's improvements to the external Music output. After several combinations of global, temporal, and voice-event evidence, C412 became a 12-coefficient model that jointly learned voice and music events from 10 fixed features. I retained Voice and Music BCE and replaced only File BCE with pairwise logistic ranking balanced by class and source. This did not directly optimize discontinuous EER; it was a ranking objective encouraging a higher File score for FAKE than for REAL.
 
-공개200은 ITW 음성20개, MUSAN-RFM 실제 음악10개, ArtifactBench 생성 음악10개의 총40부모에서 나온 10 source-pair × 20변형이었다. 가짜 음악은 Udio, MusicGen Large, Suno의 두 태그, Riffusion을 포함했다. component-only·동시혼합·순차·4+4초 two-phase, wide·16k μ-law 조건을 구성했고, 각 outer fold의 학습160과 평가40 사이 음악·음성 부모 SHA 교집합은 0이었다. 그러나 화자·작곡가·상류 사전학습 전체의 독립성이나, 같은200에서 반복한 방법 선택의 편향까지 제거한 것은 아니었다.
+The public200 panel comprised 10 source pairs × 20 transformations from 40 parents: 20 ITW voice sources, 10 MUSAN-RFM real music sources, and 10 ArtifactBench generated music sources. The fake music included Udio, MusicGen Large, two Suno tags, and Riffusion. I constructed component-only, simultaneous-mixture, sequential, and 4+4-second two-phase conditions in wide and 16k μ-law forms. Within each outer fold, there was no overlap in music or voice parent SHA between the 160 training rows and 40 evaluation rows. This did not establish complete independence of speakers, composers, or upstream pretraining, nor did it remove selection bias from repeatedly choosing methods on the same 200 rows.
 
-C412의 File EER은 source-pair OOF에서 C349 0.129670330 → 0.114835165였다. 실제 작은16개에서는 0.25 동률, 별도8개에서는 0.50 → 0.25였다. 반면 10 source-pair를 묶어 재표집한 개선량의 95% 구간은 −0.022609890에서 +0.078021978로 0을 포함했다. 전체 OOF의 10개 오류를 고치면서 7개 새 오류를 만들었고, 한 source-pair는 EER 0 → 0.109890으로 나빠졌다. 작은 패널의 개선은 실제였지만 넓은 일반화 증거는 약했다.
+C412's source-pair OOF File EER improved from C349's 0.129670330 to 0.114835165. It tied at 0.25 on an actual small16 panel and improved from 0.50 to 0.25 on a separate8 panel. However, the 95% interval for improvement from resampling the 10 source pairs as clusters ranged from −0.022609890 to +0.078021978 and included zero. Across the OOF predictions, it corrected 10 errors but introduced 7 new ones, and one source pair worsened from EER 0 to 0.109890. The improvements on the small panels were measured, but the evidence for broad generalization was weak.
 
-C413은 원 C349에 Nes2Net/WavLM singing 모델과 이 공동 head를 붙이고 **외부 File만 교체**한 제출이었다. 실행 감사상 새 값은 실제 출력에 연결되어 있었다. 그러나 C349의 같은 시각 진위·존재를 함께 요약한 aligned Voice/Music, raw/stem 사건의 hard-max를 새 affine head가 똑같이 보존하는 구조는 아니었다. Fourier와 전역 Presence가 모두 사라졌다고 설명하는 것도 부정확하다. 그 특징들은 남았지만 사건 입력·학습 목표·점수 척도·비선형 집계가 함께 바뀌었다.
+For the C413 submission, I attached the Nes2Net/WavLM singing model and this joint head to the original C349 and **replaced only the external File output**. An execution audit confirmed that the new values reached the actual output. However, the new affine head did not preserve exactly the same structure as C349's aligned Voice/Music evidence, which summarized authenticity and presence at the same time positions, or its hard-max over raw/stem events. It would also be inaccurate to say that Fourier and global Presence disappeared entirely. Those features remained, but event inputs, the training objective, score scales, and nonlinear aggregation changed together.
 
-사용자 제공 서버 결과는 ADS **0.8003809524**, 총점 0.8192515079로 C349보다 ADS 0.0153571428 낮았다. 이 실패는 “Nes가 실행되지 않았다”가 아니라 공개에서 고른 전면 교체가 서버로 전이되지 않았다는 관측이다. 서버의 숨은 생성기나 혼합 비율을 알아낸 결과는 아니다. 이후 회고의 기준은 새 모델의 개별 지표뿐 아니라, 원 구조가 지키던 강한 한쪽 증거와 시간 관계를 무엇으로 대체했는지 확인하는 것이 됐다.
+My recorded server result was ADS **0.8003809524** and total score 0.8192515079, an ADS decrease of 0.0153571428 from C349. This failure showed that the wholesale replacement selected on public data did not transfer to the server; it was not evidence that “Nes did not run.” It did not reveal the server's hidden generators or mixture proportions. From that point on, I assessed not only each new model's individual metrics but also what replaced the strong evidence from either branch and the temporal relationships preserved by the original structure.
 
-근거: `research/c412_pairwise_joint_file/C412_RESULT_REPORT_2026-09-10.md`, `SOURCEPAIR_UNCERTAINTY_2026-09-10.md`; `docs/C413_RESEARCH_AND_SUBMISSION_2026-09-10.md`; `docs/C414_C413_FAILURE_AND_VALIDATION_RESET_2026-09-10.md`.
+Evidence: `research/c412_pairwise_joint_file/C412_RESULT_REPORT_2026-09-10.md`, `SOURCEPAIR_UNCERTAINTY_2026-09-10.md`; `docs/C413_RESEARCH_AND_SUBMISSION_2026-09-10.md`; `docs/C414_C413_FAILURE_AND_VALIDATION_RESET_2026-09-10.md`.
 
-### 3.2 C414–C446: 실제 표현 학습도 출처와 최종 역할을 넘어서야 했다
+### 3.2 C414–C446: Actual Representation Learning Still Had to Transfer Across Sources and Into Its Final Role
 
-C413 뒤에는 출력 조합만 바꾸는 데서 벗어나 표현 자체를 학습했다. C414는 C205 Deezer의 전체 CNN을 갱신하며 여섯 음성·채널 조건을 억제하는 gradient reversal 보조목표를 넣었다. 696음악 원천의 실제4,176파형, 3epoch·3,132update를 완료했다. 첫 convolution의 gradient와 변경, GRL 부호, 저장·복원, held 비사용도 확인했다. 그럼에도 held766/133원천 EER은 **0.225889 → 0.241594**로 나빠졌다. 훈련 BCE 감소와 조건 보조학습만으로 불변 표현이나 일반화를 얻었다고 주장할 수 없었다. 자료 균형과 전체층 갱신도 함께 바뀌었으므로 GRL 하나를 실패 원인으로 확정하지 않았다.
+After C413, I moved beyond output combinations and trained the representations themselves. C414 updated the full C205 Deezer CNN with a gradient-reversal auxiliary objective intended to suppress six voice/channel conditions. I completed training on 4,176 actual waveforms from 696 music sources, with 3 epochs and 3,132 updates. I also checked the gradient and weight changes in the first convolution, the GRL sign, saving and restoring, and non-use of held data. Even so, EER on held766/133 sources worsened from **0.225889 to 0.241594**. A falling training BCE and condition-based auxiliary learning did not establish invariant representations or generalization. Because data balance and full-layer updating also changed, I did not identify GRL alone as the cause of failure.
 
-C417은 SONICS 전체 encoder를 File OR 목표로 학습했다. 744원천·4,464파형, 4epoch·2,232update를 완료했지만 File EER은 0.318566이었다. 깨끗한 음악만으로 동일 정답을 비교하면 C205의 EER 0.199359보다 C417의 0.300641이 나빴다. 실제 음악에 Kokoro 가짜 음성을 더해 File 점수가 오르는 방향은 과제와 맞지만, 실제 LibriSpeech 음성도 REAL 파일의 점수를 높였다. 합성 음성 held는 같은 Kokoro의 다른 네 음원에 불과해 새 TTS/VC 전체로 일반화한 근거도 아니었다.
+C417 trained the entire SONICS encoder with a File OR objective. It completed 4 epochs and 2,232 updates on 4,464 waveforms from 744 sources, but File EER was 0.318566. Comparing identical labels on clean music alone, C417's EER of 0.300641 was worse than C205's 0.199359. Increasing File scores when Kokoro fake voice was added to real music was consistent with the task, but real LibriSpeech voice also raised the scores of REAL files. The synthetic-voice held set contained only four other recordings from the same Kokoro system, so it did not establish generalization across new TTS/VC systems.
 
-음성 축도 같은 교훈을 남겼다. AASIST를 Pocket 조건에 적응한 C422는 자체 held에서 이득이 있었지만 C423의 RADAR24 EER 0.50 → 0.666667, ITW40 0.10 → 0.15로 회귀했다. C430은 Wav2Vec2 마지막 두 층과 head를 여러 생성기 자료로 학습했다. 832쌍의 wide/phone·REAL/FAKE 3,328행을 4epoch 학습한 최종 모델은 미학습 ASV 공격160에서 0.075였지만 ITW40은 0.40, RADAR24는 0.50이었다. C426의 해당 값은 0.025, 0.10, 0.50이었다. 추가 MLAAD 생성기를 배운 효과는 새 DEV에 일부 남았지만 다른 출처까지 보편적으로 좋아지지는 않았다. 원 encoder를 동결한 C435/C436 선형 대조도 ITW를 0.30으로 회복했을 뿐 ASV 0.0875, RADAR 0.50, MLAAD40 0.30으로 범용 교체 근거를 만들지 못했다.
+The voice branch yielded the same lesson. C422, which adapted AASIST to Pocket conditions, improved on its own held set but regressed in C423: RADAR24 EER went from 0.50 to 0.666667 and ITW40 from 0.10 to 0.15. C430 trained the last two Wav2Vec2 layers and its head on data from multiple generators. Its final model, trained for 4 epochs on 3,328 wide/phone and REAL/FAKE rows from 832 pairs, achieved 0.075 on 160 unseen ASV-attack examples, but 0.40 on ITW40 and 0.50 on RADAR24. The corresponding C426 values were 0.025, 0.10, and 0.50. Some benefit from learning additional MLAAD generators remained on new DEV data, but it did not improve all other sources. The C435/C436 linear controls with the original encoder frozen recovered ITW only to 0.30; ASV 0.0875, RADAR 0.50, and MLAAD40 0.30 did not support a general replacement.
 
-C445는 더 좁고 실제 배포와 가까운 가설이었다. 혼합 원음 대신 Demucs vocals를 학습하고 clean 음성도 함께 보존하도록 Spectra의 마지막 block23만 적응했다. 실제 TRAIN96, 별도 DEV80에서 분리 음성 EER **0.05 → 0**, clean 0 유지라는 결과를 얻었다. 하지만 C446에서 같은 학습 block을 실제 C349 raw/stem·시간·File 결합에 넣자 8파일 EER/AUC는 0.50/0.625 동률이었다. 두 REAL 혼합 파일의 음성 사건과 File 의심 점수는 오히려 올랐다. 작은 DEV의 성공은 지우지 않되, 그것을 최종 File 개선으로 승격하지 않은 사례다.
+C445 tested a narrower hypothesis closer to actual deployment. I adapted only Spectra's final block23 to train on Demucs vocals instead of mixed raw audio while retaining clean voice examples. With an actual TRAIN96 and separate DEV80, separated-voice EER improved from **0.05 to 0**, while clean-voice EER remained 0. However, when I inserted the same trained block into C349's actual raw/stem, temporal, and File combination in C446, EER/AUC on 8 files tied at 0.50/0.625. Voice-event and File suspicion scores actually rose for two REAL mixture files. I preserved the success on the small DEV set without promoting it to a claim of final File improvement.
 
-근거: `research/c414_adversarial_full_training/C414_RESULT_AND_FAILURE_2026-09-10.md`; `research/c417_sonics_file_training/C417_RESULT_AND_LIMITS_2026-09-10.md`; `research/c423_aasist_cross_generator_probe/C423_RESULT_AND_FAILURE_2026-09-10.md`; `research/c433_c430_final_external/C433_C434_FINAL_FINDINGS_2026-09-11.md`; `research/c436_frozen_probe_external/C435_C436_FINAL_FINDINGS_2026-09-11.md`; `research/c445_spectra_stem_adaptation/C445_RESULT_AND_LIMITS_2026-09-11.md`; `research/c446_spectra_stem_file_transfer/C446_RESULT_AND_STOP_2026-09-11.md`.
+Evidence: `research/c414_adversarial_full_training/C414_RESULT_AND_FAILURE_2026-09-10.md`; `research/c417_sonics_file_training/C417_RESULT_AND_LIMITS_2026-09-10.md`; `research/c423_aasist_cross_generator_probe/C423_RESULT_AND_FAILURE_2026-09-10.md`; `research/c433_c430_final_external/C433_C434_FINAL_FINDINGS_2026-09-11.md`; `research/c436_frozen_probe_external/C435_C436_FINAL_FINDINGS_2026-09-11.md`; `research/c445_spectra_stem_adaptation/C445_RESULT_AND_LIMITS_2026-09-11.md`; `research/c446_spectra_stem_file_transfer/C446_RESULT_AND_STOP_2026-09-11.md`.
 
-### 3.3 C465: 새 생성기 학습은 성공했지만 짧은 사건의 증거가 희석됐다
+### 3.3 C465: Learning a New Generator Succeeded, but Evidence From Short Events Was Diluted
 
-음악 학습의 기본 자료는 631곡에서 파생한 3,690행이었다. REAL은 FMA273곡과 MUSAN24곡, FAKE는 334곡이었다. 같은 고정4초 음악에 clean, 실제 음성 혼합, Kokoro 합성 음성 혼합과 전화 변형을 적용했다. 학습 질량은 클래스→identity→view 균등이었으며 생성기 균등은 아니었다. FAKE 음악에서는 Suno 네 bucket과 Yue가 큰 비중을 차지했다. outer766은 133곡의 변형이며 FAKE78곡 중 DiffRhythm50곡은 TRAIN에 없었다. 그러므로 완전한 generator-held도, 동일 분포 평가도 아니었다. 3,690행을 3,690개의 새 음악으로 이해하면 자료 다양성을 크게 과장하게 된다.
+The base music-training data contained 3,690 rows derived from 631 tracks. REAL comprised 273 FMA tracks and 24 MUSAN tracks; FAKE comprised 334 tracks. I applied clean, real-voice mixture, Kokoro synthetic-voice mixture, and telephone transformations to the same fixed 4-second music excerpts. Training weight was equalized by class, then identity, then view, rather than by generator. Four Suno buckets and Yue accounted for a large share of the fake music. outer766 contained transformations of 133 tracks, and 50 DiffRhythm tracks among its 78 FAKE tracks were absent from TRAIN. It was therefore neither a fully generator-held evaluation nor an evaluation with an identical distribution. Treating the 3,690 rows as 3,690 new pieces of music would greatly overstate data diversity.
 
-C461은 C205의 판단을 같은 기존 입력에서 증류해 held766 EER을 0.225889 → 0.190674로 낮췄다. C465는 여기에 AIME Riffusion48개 × 여섯 조건=288행을 추가했다. 합계 TRAIN3,978행/679곡, 12epoch·5,976update였고 기존 입력에만 C205 teacher를 적용했다. 새 생성기의 오답까지 강제로 보존하지 않도록 새288행은 BCE만 사용했다. 별도 Riffusion16곡의96변형에 재사용 REAL314행을 붙인 EER은 C205 **0.247611 → 0.001592**였다. 가까운 새 생성기에서 강한 학습 효과가 있었지만, 새로운 REAL 검증도 아니고 모든 생성기에 대한 보증도 아니었다.
+C461 distilled C205's decisions on the same existing inputs, reducing held766 EER from 0.225889 to 0.190674. C465 added 48 AIME Riffusion sources × six conditions, or 288 rows. The total was TRAIN3,978 rows/679 tracks, trained for 12 epochs and 5,976 updates, with the C205 teacher applied only to the existing inputs. The new 288 rows used BCE alone so that the teacher's mistakes on the new generator would not be forcibly preserved. On 96 transformations of 16 separate Riffusion tracks combined with 314 reused REAL rows, EER improved from C205's **0.247611 to 0.001592**. This showed a strong learning effect on closely related examples from the new generator, but it was neither new REAL validation nor a guarantee across all generators.
 
-기존766 EER은 C461과 0.190674 동률이었다. 실제 C349의 C205 슬롯으로 옮긴 C466은 Music160 0.25 → 0.2375, File200 0.129670 동률, novel64 0.124103 동률이었다. 별도16음악 부모의128변형 C467에서는 외부 Music EER 0.1875 동률이었다. 12초 안 가짜 음악2초를 교체하고 실제 음성을 겹친 조건의 외부 Music EER은 0.4375로 남았다. 새 생성기 단독에서 보인 큰 개선을 최종 제출 점수에 더할 수 없는 이유가 구체화됐다.
+EER on the existing766 tied C461 at 0.190674. In C466, which moved C465 into the C205 slot of the actual C349 pipeline, Music160 improved from 0.25 to 0.2375, while File200 tied at 0.129670 and novel64 tied at 0.124103. On C467's 128 transformations from 16 separate music parents, external Music EER tied at 0.1875. External Music EER remained 0.4375 under the condition that replaced 2 seconds within a 12-second clip with fake music and overlaid real voice. This made it clearer why I could not add the large improvement on the new generator alone to an expected final submission score.
 
-저장된 창별 점수 감사에서는 Deezer가 사건을 전혀 못 본 것이 아니었다. 2초 삽입 구간 안에 두 창이 들어가 사건의 78%를 읽었고, 대응 REAL/FAKE 쌍의 국소 순위도 C205 9/16 → C465 11/16으로 좋아졌다. 하지만 C180과 평균하고 전체 창을 Presence로 집계한 뒤에는 9/16, 최종 외부 Music은 10/16이었다. 한 예에서는 국소 C465가 REAL 0.357189/FAKE 0.784186이었지만, 최종 Music은 0.163674/0.156255로 순서가 뒤집혔다. 역방향 Fourier와 사건 밖 창을 고른 Dasheng이 결합에 함께 작용했다. 반대로 국소 판별부터 틀리는 부모도 남았다. 따라서 문제는 관측 누락·집계 희석·국소 판별 오류가 함께 있는 것이며 pooling 변경 하나가 모든 실패를 해결한다고 단정할 수 없었다.
+An audit of saved window scores showed that Deezer had not entirely missed the event. Two windows fell within the 2-second insertion and covered 78% of the event, while the local ranking of matched REAL/FAKE pairs improved from C205's 9/16 to C465's 11/16. However, after averaging with C180 and aggregating all windows with Presence, that became 9/16, and the final external Music output achieved 10/16. In one example, local C465 scores were REAL 0.357189/FAKE 0.784186, but final Music scores were 0.163674/0.156255, reversing the order. Oppositely directed Fourier evidence and Dasheng's selection of a window outside the event both contributed to the combination. Other parents still failed at the local classification stage. The problem therefore involved missing observations, aggregation dilution, and local classification errors together; I could not conclude that one pooling change would solve every failure.
 
-근거: `research/c566_eat_lastblock/C566_PUBLIC_TRAINING_COVERAGE_AUDIT.md`; `research/c461_deezer_teacher_preservation/C461_RESULT_AND_LIMITS_2026-09-11.md`; `research/c465_riffusion_expansion_kd/C465_FREEZE.md`, `C465_RESULT_AND_LIMITS_2026-09-11.md`; `research/c466_c465_music_transfer/C466_RESULT_AND_NEXT_2026-09-11.md`; `research/c467_c465_broader_transfer/C467_RESULT_AND_LIMITS_2026-09-11.md`, `C467_PARTIAL_WINDOW_DIAGNOSIS_2026-09-11.md`.
+Evidence: `research/c566_eat_lastblock/C566_PUBLIC_TRAINING_COVERAGE_AUDIT.md`; `research/c461_deezer_teacher_preservation/C461_RESULT_AND_LIMITS_2026-09-11.md`; `research/c465_riffusion_expansion_kd/C465_FREEZE.md`, `C465_RESULT_AND_LIMITS_2026-09-11.md`; `research/c466_c465_music_transfer/C466_RESULT_AND_NEXT_2026-09-11.md`; `research/c467_c465_broader_transfer/C467_RESULT_AND_LIMITS_2026-09-11.md`, `C467_PARTIAL_WINDOW_DIAGNOSIS_2026-09-11.md`.
 
-### 3.4 C473–C547: 부분 위조와 시간 attention, 그리고 원 교사 보존
+### 3.4 C473–C547: Partial Fakes, Temporal Attention, and Preservation of the Original Teacher
 
-C473은 C465 특징을 동결하고 4,545파라미터 시간 head를 학습했다. 기존3,978행에 실제 편집한1,024행을 더했다. 같은 위치를 편집한 REAL 대조(RR), REAL 배경에 2초 FAKE를 넣은 RF, 연속 REAL/FAKE와 전화 조건이 포함됐다. local occupancy와 max-logit bag을 함께 감독했다. 5,002행/5,976update를 완료했지만 새 held256 전체의 이득이 부분 위조의 일관된 이득은 아니었다. partial128 EER은 C465 max 0.296875보다 C473 0.3125가 나빴다. 반면 C475에서 C180과 고정 결합하자 Music160 0.25 → 0.2125, novel64 0.124103 → 0.078462의 보완성은 나타났다.
+C473 froze C465 features and trained a temporal head with 4,545 parameters. I added 1,024 actually edited rows to the existing 3,978 rows. These included REAL controls edited at the same positions (RR), 2-second FAKE insertions into REAL backgrounds (RF), continuous REAL/FAKE examples, and telephone conditions. I jointly supervised local occupancy and a max-logit bag. Training completed on 5,002 rows with 5,976 updates, but the overall benefit on the new held256 did not translate into consistent gains on partial fakes. partial128 EER was worse for C473 at 0.3125 than for C465 max at 0.296875. In contrast, a fixed combination with C180 in C475 showed complementarity: Music160 improved from 0.25 to 0.2125 and novel64 from 0.124103 to 0.078462.
 
-C488은 경계 보조학습을 더해 새 held256 EER을 0.199219 → 0.179688로 개선했다. 주된 이득은 연속 음악에서 왔으며 부분 wide는 0.25 → 0.3125로 손실이었다. 병행한 새로운 특징 학습도 만능은 아니었다. C493의 fresh 주파수 패턴 분류기는 기존766 EER 0.477792, C497의 위상 CNN은 0.334233이었고, 마스킹·mixup을 더한 C499는 0.382454였다. C497의 훈련 BCE가 거의0으로 내려갔다는 사실은 held 일반화의 증거가 아니었다. scratch 선형 스펙트럼 LCNN인 C549도 실제7,380파형 학습을 마쳤으나 outer766 EER 0.351044로 기준0.225889보다 약했다. 새40의 별도 신호가 있더라도 전체 교체는 정당화되지 않았다.
+C488 added boundary auxiliary learning, improving new held256 EER from 0.199219 to 0.179688. Most of the gain came from continuous music, while partial wide regressed from 0.25 to 0.3125. Parallel efforts to learn new features were not universal solutions either. C493's fresh frequency-pattern classifier achieved 0.477792 on the existing766, C497's phase CNN achieved 0.334233, and C499 with masking and mixup achieved 0.382454. The fact that C497's training BCE fell almost to 0 did not establish held generalization. C549, a linear-spectrum LCNN trained from scratch, also completed training on 7,380 actual waveforms but achieved outer766 EER 0.351044, weaker than the 0.225889 baseline. Even with a distinct signal on the new40, a wholesale replacement was not justified.
 
-C520은 평균과 최댓값의 절충을 고정 규칙으로 고르지 않고 **학습 가능한 gated attention**으로 구했다. frozen C465 특징과 원 logit, 시간 convolution, 경계 보조 head를 쓰는 5,651파라미터 구조였다. 동일5,002행을 12epoch·5,976update 학습하고 파일 안 유효 창들의 local logit을 attention으로 가중합했다. 이 연산은 기존 Presence 가중 확률 평균과 다르다. 마지막 수치 검사에서 FP32 batch-shape 차이로 logit 오차가 2.384e-6이 되어 중단했지만, 확률 차이는 4.47e-8, invalid padding 영향은0이었다. 체크포인트를 재학습하지 않고 단일 파일 경로로 평가를 복구했다. 수치 검사의 중단과 실제 성능 실패를 분리한 기록이다.
+C520 learned the tradeoff between mean and maximum through **trainable gated attention** instead of choosing a fixed rule. It had 5,651 parameters and used frozen C465 features, the original logit, temporal convolution, and a boundary auxiliary head. I trained it on the same 5,002 rows for 12 epochs and 5,976 updates, then used attention to form a weighted sum of local logits over valid windows within each file. This operation differs from the existing Presence-weighted average of probabilities. The final numerical check stopped because an FP32 batch-shape difference produced a logit error of 2.384e-6, but the probability difference was 4.47e-8 and the effect of invalid padding was 0. I recovered evaluation through the single-file path without retraining the checkpoint. This record separates a stop triggered by a numerical check from an actual performance failure.
 
-C532는 C349의 외부 Music에서 C205 절반을 C465+C520 bag으로 교체했다. 나머지 전문가와 기존 C346 배합계수, File·Voice·Presence는 유지했다. 공개 Music160은 0.25 → 0.2125, novel64는 0.124103 → 0.045641, extra128은 0.1875 동률이었다. 그러나 overlap은 0.30 → 0.40으로 나빠졌다. 정상 서버 실행 뒤 사용자 보고 ADS는 **0.8123095238**로 C349보다 낮았다. 원 C205 직접 판단이 사라졌고, 새 점수의 시간 집계·척도·다른 전문가와의 오류 관계가 달라졌는데 옛 결합계수를 그대로 적용한 것이 확인 가능한 구조적 차이였다. 이것을 서버 회귀의 유일한 원인으로 확정하지는 않았다.
+C532 replaced the C205 half of C349's external Music computation with the C465+C520 bag. I retained the other experts, the existing C346 combination coefficients, and File, Voice, and Presence. Public Music160 improved from 0.25 to 0.2125 and novel64 from 0.124103 to 0.045641, while extra128 tied at 0.1875. However, overlap worsened from 0.30 to 0.40. After a successful server run, my recorded ADS was **0.8123095238**, below C349. A verifiable structural difference was that the original C205's direct decision had disappeared, while the new score's temporal aggregation, scale, and error relationships with other experts had changed, yet I had retained the old combination coefficients. I did not establish this as the sole cause of the server regression.
 
-C536은 원 C205의 창별 판단과 파일 확률평균을 attention 학습에 직접 증류했다. 단독 all862 EER은 C520 0.172666 → C536 0.197266으로 나빠졌지만, 고정 최종 조합에서는 extra128이 0.1875 → 0.15625로 좋아지고 overlap 손실 일부를 회복했다. 단독 EER만으로 후보를 버려도 잘못될 수 있다는 반례다. 이를 Music-only로 패키징한 C547의 사용자 보고 ADS는 **0.8131666667**이었다. C532보다는 조금 좋았지만 C349를 넘지 못했다. 교사를 보존하는 학습, 입력을 보존하는 결합, 실제 정답을 보존하는 결과는 각각 별도로 확인해야 했다.
+C536 directly distilled the original C205's window decisions and file-level probability average into attention training. Its standalone all862 EER worsened from C520's 0.172666 to C536's 0.197266, but in the fixed final combination, extra128 improved from 0.1875 to 0.15625 and some overlap losses were recovered. This was a counterexample to discarding candidates based solely on standalone EER. I packaged it as the Music-only C547, whose recorded server ADS was **0.8131666667**. It was slightly better than C532 but did not exceed C349. Training that preserves a teacher, a combination that preserves inputs, and outcomes that preserve correct decisions each required separate verification.
 
-근거: `research/c473_diverse_longbag_training/C473_FINAL_RESULT.md`; `research/c488_boundary_auxiliary/C488_RESULT.md`; `research/c493_robust_fourier_training/C493_RESULT_AND_FAILURE.md`; `research/c497_phase_cnn_training/C497_RESULT_AND_FAILURE.md`; `research/c499_regularized_phase_training/C499_RESULT_AND_FAILURE.md`; `research/c549_linear_spectrum_lcnn/C549_RESULT_AND_NEXT_DECISION.md`; `research/c520_learned_temporal_pool/C520_FREEZE.md`, `C520_FINAL_PARITY_FAILURE_2026-09-12.md`; `research/c532_c520_music_submission/C532_PUBLIC_EVIDENCE_AND_HANDOFF.md`; `research/c533_c532_postmortem/AUDIT.md`; `research/c536_c205_teacher_attention/C536_C537_RESULT_AND_LIMITS.md`; `research/c548_c547_postmortem/C548_SERVER_RESULT_AND_SCOPE.md`.
+Evidence: `research/c473_diverse_longbag_training/C473_FINAL_RESULT.md`; `research/c488_boundary_auxiliary/C488_RESULT.md`; `research/c493_robust_fourier_training/C493_RESULT_AND_FAILURE.md`; `research/c497_phase_cnn_training/C497_RESULT_AND_FAILURE.md`; `research/c499_regularized_phase_training/C499_RESULT_AND_FAILURE.md`; `research/c549_linear_spectrum_lcnn/C549_RESULT_AND_NEXT_DECISION.md`; `research/c520_learned_temporal_pool/C520_FREEZE.md`, `C520_FINAL_PARITY_FAILURE_2026-09-12.md`; `research/c532_c520_music_submission/C532_PUBLIC_EVIDENCE_AND_HANDOFF.md`; `research/c533_c532_postmortem/AUDIT.md`; `research/c536_c205_teacher_attention/C536_C537_RESULT_AND_LIMITS.md`; `research/c548_c547_postmortem/C548_SERVER_RESULT_AND_SCOPE.md`.
 
-### 3.5 C548: 검증의 독립성을 다시 셌다
+### 3.5 C548: Reassessing Validation Independence
 
-C547 이후 감사는 공개 개선을 세 번의 독립 성공처럼 해석하기 어렵다는 사실을 확인했다. Music160은 C346 최종 결합기의 실제 학습 자료였다. novel64와 extra128도 새로운 모델에 한 번만 쓴 확인군이 아니었다. 정확 SHA 대조에서 **extra128의 음악 부모16개 전부가 novel64에도 있었고, novel64의35행이 그 부모에서 나왔다.** extra128은 8음악쌍/16부모, REAL artist7명과 추가 음성2부모의 변형이며 공유 음성을 포함하면 부모 그래프가 하나의 연결군이었다.
+The audit after C547 showed that I could not readily interpret the public improvements as three independent successes. Music160 had been actual training data for the C346 final combiner. novel64 and extra128 were not confirmation sets used only once for a new model either. An exact SHA comparison showed that **all 16 music parents in extra128 also appeared in novel64, and 35 novel64 rows came from those parents.** extra128 contained transformations of 8 music pairs/16 parents, 7 REAL artists, and 2 additional voice parents. Including the shared voice sources made the parent graph a single connected component.
 
-검증 범위 역시 길이·코덱·채널을 완전히 교차하지 못했다. Music160은 4/8초 mono WAV와 과거16k μ-law였고, extra128은 4/12초·true8k 전화와 일정 RMS 혼합이었다. novel64에는 실제45초와 FLAC가 있었지만 FLAC는 복제 dual-mono였고 native stereo나 최종 MP3 검증을 대신하지 못했다. “긴 음원을 전혀 보지 않았다”도 틀렸지만 “여러 포맷을 포괄했다” 역시 지나친 설명이었다.
+Validation coverage also did not fully cross duration, codec, and channel. Music160 contained 4/8-second mono WAV and the earlier 16k μ-law conditions; extra128 contained 4/12-second clips, true8k telephone audio, and mixtures with fixed RMS. novel64 included actual 45-second audio and FLAC, but the FLAC was duplicated dual-mono and did not substitute for native stereo or final MP3 validation. Saying that I had “never tested long audio” would be wrong, but saying that I had “covered multiple formats comprehensively” would also overstate the evidence.
 
-이후 기존200/64/128/16은 회귀와 원인 진단용으로 명시하고, 새 원천의 학습·배합 선택·확인 역할을 먼저 고정하는 방향으로 전환했다. 같은 부모의 변형 수를 늘리는 것, 동일 생성기의 새 곡을 추가하는 것, 미관측 생성기를 검증하는 것은 다른 작업이었다. source-authenticity proxy와 실제 음악·음성 성분 라벨도 분리했다. 이 재정비가 서버 점수 상승을 보장하지는 않지만, 공개 지표의 의미를 더 정확히 제한했다.
+I subsequently designated the existing200/64/128/16 as regression and diagnostic data and moved toward fixing the training, combination-selection, and confirmation roles of new sources in advance. Increasing the number of transformations of the same parents, adding new tracks from the same generator, and validating an unseen generator were different activities. I also separated source-authenticity proxies from actual music/voice component labels. This reset did not guarantee higher server scores, but it set more accurate limits on what the public metrics meant.
 
-근거: `research/c548_c547_postmortem/VALIDATION_RESET_FINDINGS.md`와 그 문서가 참조하는 `C548_MANIFEST_COVERAGE_CHECK.json`.
+Evidence: `research/c548_c547_postmortem/VALIDATION_RESET_FINDINGS.md` and its referenced `C548_MANIFEST_COVERAGE_CHECK.json`.
 
-### 3.6 C572–C596: EAT는 새 표현을 주었고, 역할 설계가 성패를 갈랐다
+### 3.6 C572–C596: EAT Added a New Representation, and Its Assigned Role Shaped the Outcome
 
-C564에서는 공개 EAT-base의 원본 자산과 revision·라이선스·의존성을 확인했다. 이를 이미 성공한 탐지 가중치로 취급하지 않고 frozen head와 마지막 block 적응을 실제로 검증했다. C572는 C566에서 출발해 새 음악97개와 sparse 음악·실제 음성 조건을 추가했다. 원3,690+582=4,272행/728음악, 2epoch·1,068update였다. outer766 단독 EER은 C566 0.220492 → C572 0.235091로 나빠졌지만, 같은 multiwindow extra128에서는 **0.3125 → 0.203125**로 크게 좋아졌다.
+In C564, I verified the original public EAT-base assets, revision, license, and dependencies. I did not treat them as already successful detection weights; I actually evaluated a frozen head and final-block adaptation. Starting from C566, C572 added 97 new music sources plus sparse-music and real-voice conditions. The original 3,690+582 became 4,272 rows/728 music sources, trained for 2 epochs and 1,068 updates. Standalone outer766 EER worsened from C566's 0.220492 to C572's 0.235091, but on the same multiwindow extra128 it improved substantially from **0.3125 to 0.203125**.
 
-그러나 C572를 기존 Deezer 슬롯의 1/4로 넣는 고정 방식은 최종 Music EER 0.1875 동률에 그쳤다. partial2초 조건은 C349 0.4375, C572 단독0.3125였는데 결합은0.50으로 더 나빴다. 좋은 새 모델의 신호를 기존 입력 한 곳에 작게 넣는 것만으로 전달할 수 없다는 분명한 사례였다. C575는 EAT를 독립된 네 번째 logit 입력으로 두고 D239·Fourier·Dasheng과 공개304에서 결합했다. 새72부모의 중앙4초/최대60초144행을 9 source-group fold로 나눴고, 기존Music160은 모든 fold 학습에 남았다. 따라서 새144 성적은 **결합기 수준의 group-held**였다.
+However, the fixed approach of assigning C572 one quarter of the existing Deezer slot only tied final Music EER at 0.1875. In the partial2-second condition, C349 scored 0.4375 and standalone C572 scored 0.3125, yet their combination was worse at 0.50. This was a clear example of how a good new model's signal did not necessarily survive being inserted as a small share of an existing input. C575 instead made EAT an independent fourth logit input and combined it with D239, Fourier, and Dasheng on public304. I divided 144 rows from 72 new parents, each represented by a central 4-second excerpt and audio up to 60 seconds, into 9 source-group folds; the existing Music160 remained in training for every fold. Thus, the new144 results were **group-held at the combiner level**.
 
-C575의 새144 EER은 C349 0.180556 → 0.152778, fresh40은0.10 → 0.05, extra128은0.1875 → 0.171875였다. factorial16은0.25 → 0.375로 회귀했다. C577 제출의 사용자 보고 ADS는 C349와 **0.8157380952 동점**이었다. 동일 점수는 미실행 증거가 아니었다. 공개 old160에서는 EER와 AUC까지 같았지만160개 확률이 모두 바뀌었고, 올바른 REAL–FAKE 순서269쌍 손실과269쌍 개선이 상쇄됐다. 집계 점수 동률과 출력 동일을 구별해야 했다.
+C575's new144 EER improved from C349's 0.180556 to 0.152778, fresh40 from 0.10 to 0.05, and extra128 from 0.1875 to 0.171875. factorial16 regressed from 0.25 to 0.375. My recorded server ADS for the C577 submission **tied C349 at 0.8157380952**. An equal score was not evidence that the model had not run. On public old160, even EER and AUC were identical, but all 160 probabilities changed: the loss of 269 correctly ordered REAL–FAKE pairs was offset by improvement in 269 other pairs. I had to distinguish a tie in aggregate metrics from identical outputs.
 
-C583은 동일 위치의 REAL 편집 대조와 2초 FAKE 치환·실제 음성 자료를 더해4,400행을2epoch·1,100update 학습했다. multi128 단독 EER은 C572 0.203125 → **0.140625**였고 전체 경계에서8개를 고치며 새 오류는0이었다. 다만 목표 partial 하위 EER은0.3125 동률이었다. 독립 전문가로 결합한 C584는 extra128 전체0.140625를 얻었으나 partial은0.4375로 다시 약해졌다. C586은 fresh40 EER0이라는 결과까지 갖고 제출됐지만 사용자 보고 ADS **0.8131666667**로 회귀했다. 작은 새 패널의 완벽한 순위도 서버 우위를 보장하지 못했다.
+C583 added REAL editing controls at matched positions, 2-second FAKE replacements, and real-voice data, training on 4,400 rows for 2 epochs and 1,100 updates. Standalone multi128 EER improved from C572's 0.203125 to **0.140625**, correcting 8 errors at the overall operating boundary without introducing any new errors. However, the targeted partial subset EER tied at 0.3125. Combined as an independent expert, C584 achieved 0.140625 overall on extra128, but partial weakened again to 0.4375. I submitted C586 with a fresh40 EER of 0, yet my recorded server ADS regressed to **0.8131666667**. Even perfect ranking on a small new panel did not guarantee an advantage on the server.
 
-C593은 적응 block 대신 원 frozen EAT의 **4/8/12층**에서 CLS·patch 평균·모집단 표준편차를 뽑고, 세 독립 작은 head의 logit을 평균했다. 같은4,400행을6epoch·1,650update 학습했다. outer766 EER은 C583 0.210184 → **0.165767**로 좋아졌다. extra128에서는 각 조건 EER이 동률 또는 개선인데도 전체 EER은0.140625 →0.1875로 나빴다. 조건 내부 순위가 좋아도 조건 사이 점수 정렬이 나빠질 수 있다는 사례다.
+Instead of an adapted block, C593 extracted CLS, patch means, and population standard deviations from **layers 4/8/12** of the original frozen EAT and averaged the logits of three independent small heads. I trained it on the same 4,400 rows for 6 epochs and 1,650 updates. outer766 EER improved from C583's 0.210184 to **0.165767**. On extra128, each condition's EER tied or improved, yet overall EER worsened from 0.140625 to 0.1875. This showed that ranking within conditions can improve while score alignment between conditions worsens.
 
-C594는 이 raw C593을 같은304행·9fold 방식으로 독립 결합했다. 새144 EER은0.125, extra128은0.140625, fresh40은0.05, novel64는0.078462, factorial16은0.25였다. C349 대비 다섯 패널이 동률 또는 개선이었지만 C584의 fresh40 EER0은 잃었다. 원천군집 bootstrap의 모든95% 구간은0을 포함했다. 이를 외부 Music-only C596으로 제출한 뒤 사용자 보고 ADS는 **0.8174523810**, C349 대비 약+0.001714286이었다. 이 작은 실제 이득이 C593 표현의 보완성을 지지했지만 frozen 방식이 모든 fine-tuning보다 낫다는 일반 법칙은 아니었다.
+C594 combined this raw C593 as an independent expert using the same 304-row, 9-fold procedure. EER was 0.125 on new144, 0.140625 on extra128, 0.05 on fresh40, 0.078462 on novel64, and 0.25 on factorial16. All five panels tied or improved relative to C349, but C584's fresh40 EER of 0 was lost. Every 95% interval from source-cluster bootstrap included zero. After I submitted it as the external Music-only C596, my recorded server ADS was **0.8174523810**, approximately +0.001714286 over C349. This small measured gain supported the complementarity of the C593 representation, but it did not establish a general rule that freezing is superior to every form of fine-tuning.
 
-근거: `research/c564_eat_base/C564_ACQUIRED_ASSETS.md`; `research/c572_eat_sparse_music/C572_FREEZE.md`, `C572_OUTER_RESULT_AND_LIMITS.md`, `C572_MULTIWINDOW_RESULT_AND_KEEP.md`; `research/c575_eat_independent_expert/C575_GROUPHELD_RESULT_AND_LIMITS.md`; `research/c577_c575_submission/ROOT_PUBLIC_DECISION.md`; `research/c578_c577_result_audit/C577_EQUAL_SCORE_PUBLIC_COUNTEREXAMPLES_AND_LIMITS.md`; `research/c583_eat_matched_splice/C583_TRANSFER_RESULT_AND_NEXT.md`; `research/c584_splice_eat_expert/C584_INITIAL_RESULT_AND_NEXT.md`; `research/c593_eat_depth_augmented/C593_FREEZE.md`, `C593_TRANSFER_RESULT_AND_NEXT.md`; `research/c594_depth_augmented_expert/RESULT_AND_NEXT.md`, `C594_CLUSTER_UNCERTAINTY.md`; `docs/C586_C596_SERVER_RESULTS_2026-09-14.md`.
+Evidence: `research/c564_eat_base/C564_ACQUIRED_ASSETS.md`; `research/c572_eat_sparse_music/C572_FREEZE.md`, `C572_OUTER_RESULT_AND_LIMITS.md`, `C572_MULTIWINDOW_RESULT_AND_KEEP.md`; `research/c575_eat_independent_expert/C575_GROUPHELD_RESULT_AND_LIMITS.md`; `research/c577_c575_submission/ROOT_PUBLIC_DECISION.md`; `research/c578_c577_result_audit/C577_EQUAL_SCORE_PUBLIC_COUNTEREXAMPLES_AND_LIMITS.md`; `research/c583_eat_matched_splice/C583_TRANSFER_RESULT_AND_NEXT.md`; `research/c584_splice_eat_expert/C584_INITIAL_RESULT_AND_NEXT.md`; `research/c593_eat_depth_augmented/C593_FREEZE.md`, `C593_TRANSFER_RESULT_AND_NEXT.md`; `research/c594_depth_augmented_expert/RESULT_AND_NEXT.md`, `C594_CLUSTER_UNCERTAINTY.md`; `docs/C586_C596_SERVER_RESULTS_2026-09-14.md`.
 
-### 3.7 C596–C651: 더 강한 단독 모델과 더 좋은 최종 출력은 여전히 달랐다
+### 3.7 C596–C651: A Stronger Standalone Model Still Did Not Necessarily Produce Better Final Outputs
 
-후속 표현 연구도 실제 이득을 만들었다. C630은 같은4,400행과 목적을 유지하면서 frozen EAT-large의8/16/24층을 썼다. 단독 multi128 EER은 C593 0.1875 →0.125, outer766은0.165767 →0.126747이었다. 마지막 block까지 적응한 C631은 multi128 AUC를0.932617 →0.957031로 올렸지만 전체 EER은0.125 동률, 전체 EER 경계에서 틀린16파일도 같았다. C646 시간 MIL은 partial 조건을0.25 →0.1875로 낮췄으나 전체0.125로 동률이고 다른 연속·overlap 조건에서는 기존 최종 조합에 뒤졌다.
+Subsequent representation research also produced measured gains. C630 used frozen EAT-large layers 8/16/24 while retaining the same 4,400 rows and objective. Standalone multi128 EER improved from C593's 0.1875 to 0.125, and outer766 from 0.165767 to 0.126747. C631, which also adapted the final block, raised multi128 AUC from 0.932617 to 0.957031, but overall EER tied at 0.125 and the same 16 files were wrong at the overall EER boundary. C646 temporal MIL reduced EER in the partial condition from 0.25 to 0.1875, but tied overall at 0.125 and trailed the existing final combination in other continuous and overlap conditions.
 
-사용자의 구조 재검토 지시에 따라 단독 모델을 최종 Music으로 직접 쓰는 비교도 수행했다. C633의 C630 직접 교체는 extra128에서 최종 C594의0.140625 →0.125로 좋았지만 새144에서는 **0.125 →0.222222**로 크게 악화했다. 기존18오류 중6개를 고치면서20개 새 오류를 만들었다. 따라서 기존 조합을 무조건 유지해야 한다는 결론도, 강한 단독 모델이면 바로 최종 역할을 맡길 수 있다는 결론도 근거가 부족했다. 무엇을 보존하고 어떤 원천에서 잃는지 같은 입력으로 직접 비교해야 했다.
+As part of my decision to reconsider the architecture, I also compared using a standalone model directly as the final Music output. C633's direct C630 replacement improved extra128 from the final C594's 0.140625 to 0.125, but substantially worsened new144 from **0.125 to 0.222222**. It corrected 6 of the existing 18 errors while introducing 20 new ones. The evidence therefore did not support either always preserving the existing combination or assigning a strong standalone model the final role immediately. I needed direct comparisons on the same inputs to identify what was preserved and which sources suffered losses.
 
-근거: `research/c630_eat_large_depth/RESULT_AND_LIMITS.md`; `research/c631_eat_large_lastblock/RESULT_AND_LIMITS.md`; `research/c633_standalone_direct/RESULT_AND_LIMITS.md`; `research/c646_large_temporal_mil/RESULT_AND_LIMITS.md`; `docs/RESEARCH_STRUCTURE_RESET_2026-09-15.md`.
+Evidence: `research/c630_eat_large_depth/RESULT_AND_LIMITS.md`; `research/c631_eat_large_lastblock/RESULT_AND_LIMITS.md`; `research/c633_standalone_direct/RESULT_AND_LIMITS.md`; `research/c646_large_temporal_mil/RESULT_AND_LIMITS.md`; `docs/RESEARCH_STRUCTURE_RESET_2026-09-15.md`.
 
-### 3.8 C652–C660: 전체 File 진단이 모델 추가보다 큰 변화를 만들었다
+### 3.8 C652–C660: Diagnosing the Complete File Path Produced a Larger Change Than Adding Models
 
-C652는 과거 fold별 예측과 실제 배포 상수를 구별해 C596의 완성된 File 경로를 다시 읽었다. 이미 학습에 노출된200행에서 File EER은0.12967033이었고, 진단 경계의 REAL 오탐9개 모두 내부 음악 사건만으로도 경계를 넘었다. 그러나 Presence를 무조건1로 만들거나 raw/stem 중 한쪽을 없애는 진단은 더 많은 정답을 잃었다. 정답을 주입한 oracle 분석도 가능한 모델 성능으로 취급하지 않았다.
+C652 distinguished historical fold predictions from actual deployment constants and revisited C596's complete File path. File EER was 0.12967033 on 200 rows already exposed during training, and all 9 REAL false positives at the diagnostic boundary crossed it on internal music-event evidence alone. However, diagnostic variants that forced Presence to 1 or removed either the raw or stem branch lost more correct decisions. I also did not treat oracle analyses using injected ground truth as achievable model performance.
 
-전체 경로를 실제로 실행한 C654의 새40에서는 File EER0.15에 비해 외부 Music의 같은 원천 진위 EER은0.05였다. 오탐3개는 음성 사건만 충분한 경우, 음악 사건만 충분한 경우, 둘은 경계 아래지만 OR 뒤 넘은 경우로 갈렸다. C653의 ASV8발화 clean/실제 반주16개에서는 File·Voice EER0을 지켰지만 REAL 음성에 반주를 더하면 내부 음악 사건 때문에 File 의심 점수가 올랐다. 반면 FAKE 음성은 raw 점수가 약해져도 stem이 강한 증거를 보존했다. stem 삭제나 음악 단독 판단이라는 간단한 처방은 두 결과를 함께 설명하지 못했다.
+On C654's new40, with the full path actually executed, File EER was 0.15 while external Music EER against the same source-authenticity labels was 0.05. The 3 false positives represented three different cases: voice-event evidence alone was sufficient, music-event evidence alone was sufficient, or both were below the boundary but crossed it after OR. In C653's 16 clean/real-accompaniment examples from 8 ASV utterances, File and Voice EER remained 0, but adding accompaniment to REAL voice increased File suspicion because of the internal music event. For FAKE voice, by contrast, the stem retained strong evidence even when the raw score weakened. Simple remedies such as deleting the stem or judging solely from music could not explain both findings together.
 
-더 넓은 진단에서는 원천400개를 개발300/확인100으로 나누려 했고, 당시 정상 확보378개 가운데 **진단280개(REAL130/FAKE150)**를 먼저 고정했다. 점수를 보고 대체한 것이 아니라 확보 가능성에 따른 범위 제한이었다. 중앙10초를 C596 전체 경로로 읽었고, 초반8개의 중앙 처리시간은18.94분, 계산시간의90.39%가 DF phase였다. 모델 로드 재사용만으로 대부분의 비용을 없앨 수 없었다. 이후 구조 대안은 이 느린 추론을 다시 반복하기보다 보존된 중간값으로 비교했다. 잠금 확인 자료는 후보 확정 전 개발에 사용하지 않았다.
+For a broader diagnosis, I intended to split 400 sources into 300 development and 100 confirmation sources. Among the 378 successfully acquired at that time, I first fixed **280 diagnostic sources (130 REAL/150 FAKE)**. This was a limitation imposed by availability, not replacement after observing scores. I processed the central 10 seconds through the full C596 path. Median processing time for the first 8 was 18.94 minutes, and the DF phase accounted for 90.39% of computation time. Reusing loaded models alone could not remove most of the cost. I therefore compared subsequent structural alternatives using preserved intermediate values rather than repeating this slow inference. I did not use the locked confirmation data for development before fixing a candidate.
 
-C658은 두 사건 OR를 max로 바꾸거나, 외부 Music×Presence를 직접 File에 연결하는 소수의 고정안을 비교했다. OR→max는 진단280 EER0.139231 →0.10718로 좋았지만 기존200은0.12967 →0.15549로 나빴고, two-phase는0.20 →0.30으로 회귀했다. C659는 기존 음악 사건의 global 입력만 외부 Music으로 바꿨다. 새40에서는0.15 →0.10이었으나 진단280은0.139231 →0.146410, two-phase는0.20 →0.283333이었다. 모두 단순 실행 오류가 아니라 측정된 이득과 손실이었다.
+C658 compared a small number of fixed alternatives: replacing the OR of the two events with max, or connecting external Music×Presence directly to File. OR→max improved diagnostic280 EER from 0.139231 to 0.10718, but worsened the existing200 from 0.12967 to 0.15549 and two-phase from 0.20 to 0.30. C659 replaced only the existing music event's global input with external Music. It improved new40 from 0.15 to 0.10, but worsened diagnostic280 from 0.139231 to 0.146410 and two-phase from 0.20 to 0.283333. These were measured gains and losses, not simple execution errors.
 
-C660은 더 좁은 입력을 바꿨다. File 음악 사건에는 기존 global/aligned 음악 근거 외에 Fourier 단독 logit이 별도 직접 입력으로 들어갔다. **그 직접 Fourier 입력만 이미 계산된 C596 외부 Music으로 교체**하고 계수, aligned/global 음악, Presence, raw/stem Voice max와 최종 OR를 유지했다. Fourier 자체는 여러 음악 경로 안에 남았다. 새 모델·fit·신경망 호출·서버 점수 기반 계수 선택은 없었다.
+C660 changed a narrower input. In addition to the existing global/aligned music evidence, the File music event had a separate direct input containing the standalone Fourier logit. I **replaced only that direct Fourier input with the already computed C596 external Music output**, retaining the coefficients, aligned/global music, Presence, raw/stem Voice max, and final OR. Fourier itself remained in several music paths. There was no new model, fit, neural-network call, or selection of coefficients based on server scores.
 
-| 별도로 해석해야 하는 공개 패널 | C596 File 계열 EER | C660 EER | 의미 |
+| Public panels requiring separate interpretation | C596 File-related EER | C660 EER | Meaning |
 |---|---:|---:|---|
-| 개발 source-proxy280 | 0.139231 | 0.078462 | 후보를 고른 진단 자료 |
-| 개발 source-proxy40 | 0.150000 | 0.050000 | 반복 사용한 작은 대리 정답 자료 |
-| 노출160, 외부 Music 점수 존재 | 0.180909 | 0.138182 | 학습·개발 노출 자료, 전체200 아님 |
-| 위160 중 File 정답 명확한110 | 0.063333 | 0.063333 | 중첩 부분집합, 독립 추가 성공 아님 |
-| 고정 후 별도 확인100 | 0.140000 | 0.020000 | FMA50/AIME50,35출처군의 한 번 비교 |
+| Development source-proxy280 | 0.139231 | 0.078462 | Diagnostic data used to select the candidate |
+| Development source-proxy40 | 0.150000 | 0.050000 | Repeatedly used small panel with proxy labels |
+| Exposed160 with external Music scores available | 0.180909 | 0.138182 | Data exposed during training/development; not the full200 |
+| 110 of the above160 with unambiguous File labels | 0.063333 | 0.063333 | Overlapping subset, not an additional independent success |
+| Separate confirmation100 after candidate freeze | 0.140000 | 0.020000 | One comparison on FMA50/AIME50 from 35 source groups |
 
-확인100은 원래 진단 출처군과 분리했고 후보를 고정한 뒤 전부 평가했다. 각 모델 경계에서14오류 →2오류, 13개 수정/1개 손실이었으며 AUC는0.96 →0.9972였다. 군집 bootstrap의 EER 감소95% 구간은[0.0321,0.1883]였다. 그러나 FMA/AIME의 출처와 진위가 연결되어 있고 성분 정답은 미확정이므로 공식 ADS나 서버 성공 확률로 환산하지 않았다. 한 번 사용한 뒤에는 더 이상 미사용 확인군이라고 부르지 않았다. 별도 음성·순차혼합16개에서는 EER0을 지켰지만 REAL File 점수는 평균0.070159 올라 정답 여유가 줄었다.
+I separated confirmation100 from the original diagnostic source groups and evaluated all of it after fixing the candidate. Errors at each model's operating boundary fell from 14 to 2, with 13 corrections and 1 loss, while AUC improved from 0.96 to 0.9972. The 95% interval for EER reduction from cluster bootstrap was [0.0321,0.1883]. However, source and authenticity were linked through FMA/AIME, and component labels were unconfirmed, so I did not convert this result into official ADS or a probability of server success. After this use, I no longer described the set as unused confirmation data. On a separate16 of voice and sequential mixtures, EER remained 0, but REAL File scores rose by 0.070159 on average, reducing the margin for correct decisions.
 
-C660 ZIP은 6,603,310,574바이트로 완성됐고 원 C596의 가중치·requirements와 무거운 추론 경로는 동일했다. 실제 공개116입력의 로드→전처리→직렬 추론→CSV와 파일별 독립성·보존 출력 검사를 통과했다. 이는 Windows CPU 직렬 증거이며 Linux/L4 한 프로세스 전체 검증을 새로 수행한 것은 아니었다. 이후 사용자가 제공한 서버 결과는 총점 **0.8436157937 / ADS 0.8274523810 / CPS 0.9890865079**, 실행26분15초였다. C596보다 ADS 약0.01000 개선되어, 이미 학습한 음악 신호의 File 전달 경로를 바로잡는 변경이 해당 평가에서 유효했음을 확인했다. 공개 EER 감소량을 서버 ADS에 합산한 기대값은 사용하지 않았다.
+I completed the C660 ZIP at 6,603,310,574 bytes, with the original C596 weights, requirements, and heavy inference path unchanged. It passed an actual load→preprocess→serial inference→CSV run on 116 public inputs, along with checks for per-file independence and preservation of the other outputs. This was evidence from serial Windows CPU execution; I did not newly perform a complete single-process Linux/L4 validation. My subsequently recorded server result was total score **0.8436157937 / ADS 0.8274523810 / CPS 0.9890865079**, with a runtime of 26 minutes 15 seconds. The approximately 0.01000 ADS improvement over C596 confirmed that correcting the path carrying already learned music signals into File was effective in that evaluation. I did not construct an expected server ADS by adding public EER reductions to it.
 
-근거: `research/c652_c596_full_diagnosis/RESULT_AND_NEXT.md`; `research/c653_c596_matched_panel/FULL16_INTERPRETATION.md`; `research/c654_c596_fresh_file/FULL40_RESULT_AND_NEXT.md`; `research/c657_c596_ten_second_pilot/SMALL8_INTERPRETATION_AND_NEXT.md`, `LARGE280_SCOPE.md`; `research/c658_file_structure_2x2/RESULT_AND_NEXT.md`; `research/c659_preserved_music_input/RESULT_AND_LIMITS.md`; `research/c660_direct_music_evidence/RESULT_AND_LIMITS.md`, `C660_FROZEN_CONFIRMATION_PLAN.md`; `docs/C660_CONFIRMATION_AND_SUBMISSION_2026-09-19.md`; `docs/C660_SERVER_RESULT_AND_NEXT_2026-09-20.md`.
+Evidence: `research/c652_c596_full_diagnosis/RESULT_AND_NEXT.md`; `research/c653_c596_matched_panel/FULL16_INTERPRETATION.md`; `research/c654_c596_fresh_file/FULL40_RESULT_AND_NEXT.md`; `research/c657_c596_ten_second_pilot/SMALL8_INTERPRETATION_AND_NEXT.md`, `LARGE280_SCOPE.md`; `research/c658_file_structure_2x2/RESULT_AND_NEXT.md`; `research/c659_preserved_music_input/RESULT_AND_LIMITS.md`; `research/c660_direct_music_evidence/RESULT_AND_LIMITS.md`, `C660_FROZEN_CONFIRMATION_PLAN.md`; `docs/C660_CONFIRMATION_AND_SUBMISSION_2026-09-19.md`; `docs/C660_SERVER_RESULT_AND_NEXT_2026-09-20.md`.
 
-### 3.9 공개 측정과 사용자 제공 서버 결과를 분리한 기록
+### 3.9 Keeping Public Measurements Separate From My Recorded Server Results
 
-아래는 공개 검증에서 계산한 값이 아니라 보존 보고서가 사용자 제공 제출 화면으로 기록한 집계값이다. 서버의 개별 예측·정답이나 성분별 EER를 직접 얻은 기록이 아니다. 제출 파일명이 표시된 화면과 로컬 후보의 연결에도 보고서별 한계가 있으므로 “비공개 평가를 직접 감사했다”는 표현을 쓰지 않는다. 기간 전체의 최종 최고점·순위는 후속 구간에서 별도로 다룬다.
+The values below were not calculated through public validation. They are aggregate results preserved in my reports from my submission-screen records. They are not records of directly obtaining individual server predictions, labels, or component-level EER. Each report also has limits on linking the filename shown on a submission screen to a local candidate, so I do not describe this as “directly auditing the private evaluation.” The highest score and ranking over the full period are addressed separately in the subsequent section of the history.
 
-| 후보 | 의도한 변경 출력 | 사용자 보고 ADS | 사용자 보고 총점 | CPS |
+| Candidate | Intended changed output | My recorded server ADS | My recorded server total | CPS |
 |---|---|---:|---:|---:|
-| C349 기준 | Music | 0.8157380952 | 0.8330729365 | 0.9890865079 |
+| C349 baseline | Music | 0.8157380952 | 0.8330729365 | 0.9890865079 |
 | C413 | File | 0.8003809524 | 0.8192515079 | 0.9890865079 |
 | C532 | Music | 0.8123095238 | 0.8299872222 | 0.9890865079 |
 | C547 | Music | 0.8131666667 | 0.8307586508 | 0.9890865079 |
@@ -356,131 +355,132 @@ C660 ZIP은 6,603,310,574바이트로 완성됐고 원 C596의 가중치·requir
 | C596 | Music | 0.8174523810 | 0.8346157937 | 0.9890865079 |
 | C660 | File | 0.8274523810 | 0.8436157937 | 0.9890865079 |
 
-CPS가 같고 다른 네 출력 보존 계약이 실제 서버에서도 성립했다는 전제하에 변화의 역할을 설명할 수는 있다. 그러나 이 집계값으로 서버의 생성기·채널·길이 비율, 개별 라벨 또는 오류를 역산해 다음 계수를 맞추지는 않았다. C596 서버 시간에는 보존 문서 간 26분53초/26분35초의 상충 기재가 있다. 점수와 달리 이 시간은 회고의 비교 근거에서 제외하며, 두 기록을 임의로 같은 값으로 고쳐 쓰지 않는다.
+I can explain the role of the changes under the assumptions that CPS was unchanged and that the contract to preserve the other four outputs also held on the actual server. However, I did not reverse-engineer generator, channel, or duration proportions, individual labels, or errors from these aggregates to fit subsequent coefficients. Preserved documents conflict on C596's server runtime, giving 26 minutes 53 seconds and 26 minutes 35 seconds. Unlike the scores, I exclude this runtime from retrospective comparisons and do not arbitrarily rewrite the two records as the same value.
 
-### 3.10 이 구간이 남긴 실험 설계상의 교훈
+### 3.10 Experimental-Design Lessons From This Period
 
-첫째, **학습 완료·실행 검증·성능 개선은 별개**였다. C414의 전체 CNN gradient, C430의 strict load, C520의 저장 모델 복구, C549의 실제 학습은 작업이 실행됐다는 근거다. 그것이 일반화를 보장하지 않았다. 반대로 수치 허용치나 로그 저장 실패 때문에 끝난 모델을 학습 실패로 취급하거나 처음부터 다시 돌리는 것도 피해야 했다. 실제1음원→작은 batch→고정 성능 측정을 일찍 수행하고 완료된 특징·점수·체크포인트를 재사용하는 방식이 제한된 CPU·RAM 환경에서 특히 중요했다.
+First, **completed training, verified execution, and improved performance were separate outcomes**. C414's full-CNN gradients, C430's strict load, C520's recovery of a saved model, and C549's actual training were evidence that the work ran. They did not guarantee generalization. Conversely, I also needed to avoid treating a completed model as a training failure, or restarting from scratch, because of a numerical tolerance or log-saving failure. Running one actual audio file, then a small batch, then fixed performance measurements early, and reusing completed features, scores, and checkpoints, was especially important with limited CPU and RAM.
 
-둘째, **전문가의 역할과 결합 위치가 모델 선택만큼 중요**했다. 같은 EAT가 Deezer의 작은 일부일 때, 독립 전문가일 때, 외부 Music일 때, File 사건의 직접 입력일 때 효과가 달랐다. 외부 Music이 좋아져도 File 내부 음악 사건은 그대로일 수 있었다. File/Voice/Music 출력은 이름만 다른 같은 확률이 아니며, 실제 배포 수식과 같은 경로로 측정해야 했다. 좋은 단독 모델 여러 개의 개선 폭을 더해 예상 ADS를 만드는 방법은 근거가 없었다.
+Second, **an expert's role and its position in the combination mattered as much as model selection**. The same EAT had different effects when used as a small part of Deezer, an independent expert, external Music, or a direct input to the File event. External Music could improve while the internal music event in File remained unchanged. File, Voice, and Music were not the same probability with different names; I had to measure them through the same paths as the actual deployment formulas. Adding together improvements from several good standalone models to predict ADS had no evidential basis.
 
-셋째, **전체 EER·조건별 EER·오류 교환을 함께 보아야** 했다. C593처럼 모든 조건 안의 EER이 동률·개선인데 전체는 악화할 수 있고, C577처럼 EER/AUC가 같아도 확률과 순위는 크게 달라질 수 있다. 오류를 고친 수만 보고 새로 잃은 정답을 숨기면 보완성의 실체를 알기 어렵다. 보고서의 ROC 경계는 설명 도구였으며 제출 임계값으로 옮기지 않았다.
+Third, **I needed to examine overall EER, condition-level EER, and error tradeoffs together**. As in C593, EER could tie or improve within every condition while worsening overall. As in C577, probabilities and rankings could change substantially even when EER/AUC tied. Counting corrected errors while hiding newly lost correct decisions obscures the actual complementarity. ROC operating boundaries in the reports were explanatory tools; I did not transfer them into submission thresholds.
 
-넷째, **파일 수보다 독립 원천과 노출 이력이 중요**했다. 766행은133곡, 128행은8음악쌍의 변형이었다. 분할이 exact SHA에서 깨끗해도 artist·speaker·prompt·상류 사전학습 독립을 모두 보증하지는 못했다. 검증을 반복 관찰한 뒤 구조를 고르면 그 자료는 개발 자료다. C548의 부모 중복 확인과 C660 후보 고정 후 확인100은 이 점을 실험 운영에 반영한 중요한 변화였다.
+Fourth, **independent sources and exposure history mattered more than file counts**. The 766 rows represented 133 tracks; the 128 rows were transformations of 8 music pairs. Even a split clean under exact SHA matching did not guarantee independence of artists, speakers, prompts, or upstream pretraining. Once I repeatedly observed validation results to choose a structure, those data became development data. C548's identification of overlapping parents and C660's confirmation100 after candidate freeze were important changes that put this principle into practice.
 
-마지막으로 모든 시도는 출처·버전·라이선스와 실제 학습파일 보존 기록을 남기는 범위에서 진행됐다. 공개 비영리 연구 사용 판단과 최종 수상 산출물의 독점적 권리 이전은 별도 문제였고, 여러 계보의 권리 HOLD는 이 구간에서 포괄 해소되지 않았다. 이 회고에 모델·음원이나 파일별 검증 예측을 포함하지 않는 이유도 성능 설명과 제3자 자산 재배포를 분리하기 위해서다. 실험 당시의 계획·초안은 완료 결과로, 공개 proxy는 공식 ADS로, 사용자가 보고한 순위는 공식 최종 순위로 바꾸어 서술하지 않는다.
+Finally, I carried out these experiments while retaining source, version, license, and actual training-file records. Permission for public noncommercial research use and exclusive rights transfer for final prize deliverables were separate issues, and the rights HOLDs affecting several lineages were not comprehensively resolved during this period. I also exclude models, audio, and per-file validation predictions from this retrospective to keep performance reporting separate from redistribution of third-party assets. I do not recast experimental plans or drafts as completed results, public proxies as official ADS, or my recorded rankings as an official final ranking.
 
-## 4. C660 이후: 좋아진 것은 무엇이고, 왜 더 이상 오르지 않았나
+## 4. After C660: What improved, and why progress stalled
 
-### 4.1 C660 → C693: 정보가 전달되는 경로를 고친 두 번의 상승
+### 4.1 C660 → C693: Two gains from correcting the evidence paths
 
-C660의 서버 ADS는 **0.8274523810**이었다. C596의 0.8174523810에서 +0.0100000000이다. 새 전문가를 추가한 것이 아니라, 이미 계산한 외부 Music 앙상블의 증거가 File 내부로 전달되도록 직접 Fourier 입력 슬롯을 교체한 변화였다. 여러 전문가가 알아낸 FAKE 증거가 최종 결합에 충분히 도달하지 않는다는 정량 진단이 유효했다.
+C660 achieved a server ADS of **0.8274523810**, an increase of +0.0100000000 over C596's 0.8174523810. I did not add another expert. I replaced the direct Fourier input slot so the evidence already computed by the external Music ensemble could reach the internal File path. My quantitative diagnosis—that FAKE evidence detected by several experts was not reaching the final fusion strongly enough—proved useful.
 
-C682는 원음 음성 경로의 커버리지를 바꿨지만 서버 ADS가 C660과 같았다. 이 동점만으로 서버가 해당 출력을 무시했다거나 특정 유형이 없었다고 결론 내릴 수 없다. EER은 확률값 전체의 변화량이 아니라 순위와 오류 경계에 반응한다.
+C682 changed coverage in the original-audio voice path, but its server ADS tied C660. That tie does not establish that the server ignored the output or that a particular type of audio was absent. EER responds to ordering and the error boundary, not to the total magnitude of probability changes.
 
-다음에는 File 내부 음성 경로를 살폈다. 원 DF-Arena가 실제 음악을 FAKE 음성 증거로 읽는 공개 자료의 오류를 억제하되 실제 위조 음성 탐지를 보존하려 했다. 초기 C687은 부족한 native-music 노출과 보존 성능 때문에 탈락했다. C688은 ASV/MLAAD × REAL/FAKE 네 음성 그룹과 native-music을 매 update에 포함하는 고정 학습으로 변경했다. 원 모델 전체를 다시 학습하지 않고 마지막 Conformer 블록과 분류기를 학습했다.
+I next examined the internal File voice path. I wanted to suppress errors in which the original DF-Arena model treated real music as evidence of fake speech, while retaining detection of genuinely manipulated speech. I rejected the initial C687 because its native-music exposure and retention performance were insufficient. For C688, I switched to a fixed training schedule that included the four ASV/MLAAD × REAL/FAKE speech groups and native music in every update. I trained the final Conformer block and classifier rather than retraining the entire original model.
 
-검증 결과는 패널의 성격과 함께 해석했다.
+I interpreted each validation result in the context of the panel that produced it.
 
-| 공개 평가 | 관측 | 한계 |
+| Public evaluation | Observation | Limitation |
 |---|---|---|
-| C689 known40 | File EER 0.05 보존 | 반복 사용한 소규모 공개 자료 |
-| C691 오류선택 41 | 설명용 임계값 오류 22→17; REAL 오탐 6개 회복·새 손실 1개, 순위쌍 72개 개선·2개 손실 | 오류를 골라 만든 source-proxy 패널이며 일반 오류율이 아님 |
-| C692 source-proxy 100 | EER 0.02 / AUC 0.9972 보존; 순위쌍 3개 개선·3개 손실 | File/Voice/Music의 완전한 공식 정답이 아님 |
+| C689 known40 | File EER preserved at 0.05 | A small, repeatedly used public panel |
+| C691 error-selected 41 | Errors at the diagnostic threshold fell from 22 to 17; 6 REAL false positives recovered, 1 new loss; 72 rank pairs improved and 2 worsened | An error-selected source-proxy panel, not a general error-rate estimate |
+| C692 source-proxy 100 | EER 0.02 / AUC 0.9972 preserved; 3 rank pairs improved and 3 worsened | Not complete official File/Voice/Music ground truth |
 
-C693은 이 학습 tail을 **File 내부 원음/분리음 음성 판단에만** 사용했다. 원 DF encoder의 중간 표현을 공유하여 비싼 전체 encoder를 두 번 실행하지 않았다. 외부 Voice에는 원 DF를 그대로 사용했고, 외부 Music과 두 Presence도 유지했다. C660의 음악 전달 경로 역시 유지했다.
+In C693, I applied the learned tail **only to the original-audio and separated-audio voice decisions inside File**. I shared the intermediate representation from the original DF encoder, avoiding a second run of the expensive full encoder. I kept the original DF model for the external Voice output, and preserved external Music and both Presence outputs. I also retained C660's music-evidence routing.
 
-사용자 제공 서버 결과는 **ADS 0.8362380952**, 총점 0.8515229365, CPS 0.9890865079, 26분 53초였다. C660 대비 ADS +0.0087857142다. 구현상 바뀐 출력은 File뿐이라는 점과 집계 점수의 상승은 확인할 수 있지만, 서버의 개별 파일 오류나 유형별 구성은 알 수 없다.
+My recorded server result was **ADS 0.8362380952**, overall score 0.8515229365, CPS 0.9890865079, and a runtime of 26 minutes 53 seconds. That was an ADS gain of +0.0087857142 over C660. I can establish that only the File output changed in the implementation and that the aggregate score increased. I cannot identify the server's per-file errors or its proportions of audio types from that result.
 
-로컬 깨끗한 Windows 환경에서는 실제 음원 → 음악 → DF → Spectra의 직렬 smoke test와 CSV 출력을 확인했다. 기록된 전체 출력 최대 차이는 약 3.05e-8이다. 이것을 Linux/L4의 모든 파일·최대 메모리 재현까지 검증한 것으로 확대하지 않는다. 사용자 서버 제출 완료 사실과 로컬 실행 검증의 범위는 별개다.
+In a clean local Windows environment, I checked a serial smoke test from an actual audio file through music inference, DF, Spectra, and CSV output. The recorded maximum difference across the final outputs was about 3.05e-8. I do not extend that check into a claim that all files and peak memory were reproduced on Linux/L4. My completed server submission and the scope of my local execution checks are separate pieces of evidence.
 
-근거: `docs/C660_SERVER_RESULT_AND_NEXT_2026-09-20.md`, `docs/C693_SERVER_RESULT_AND_NEXT_2026-09-24.md`, `docs/C693_FILE_VOICE_ADAPTATION_2026-09-24.md`.
+Evidence: `docs/C660_SERVER_RESULT_AND_NEXT_2026-09-20.md`, `docs/C693_SERVER_RESULT_AND_NEXT_2026-09-24.md`, `docs/C693_FILE_VOICE_ADAPTATION_2026-09-24.md`.
 
-### 4.2 C704·C710·C722: 단독 지표 개선이 배포 조합의 개선은 아니었다
+### 4.2 C704, C710, and C722: Better standalone metrics did not mean a better deployed combination
 
-C704는 File 내부 Deezer 쌍을 C180+C205에서 C180+C465로 바꿨다. 외부 Music은 바꾸지 않았다. 서버 결과는 C693과 **정확히 같은 ADS**였다. C709의 공개 자료 추적에서는 변화가 단계마다 줄어들었다. C465−C205 평균 절대 차이 약 0.07997이 평균 혼합 후 0.03999, presence 집계 후 0.03909, qMusic에서 0.01129, File에서 0.00973이었다. known40의 400개 REAL–FAKE 순위쌍은 모두 그대로였고, retention100에서는 일부 순위 개선이 있었지만 EER은 0.02 그대로였다. 따라서 ‘변경이 실제 적용되지 않았다’가 아니라 **변경은 전달됐으나 EER 경계를 충분히 바꾸지 못했다**는 설명이 공개 측정과 부합한다. 숨은 서버 데이터의 구성에 대한 증명은 아니다.
+C704 replaced the internal File Deezer pair, C180+C205, with C180+C465. I left external Music unchanged. Its server ADS was **exactly the same as C693's**. In C709's public-data trace, the effect shrank at each stage: a mean absolute C465−C205 difference of about 0.07997 became 0.03999 after averaging, 0.03909 after presence aggregation, 0.01129 at qMusic, and 0.00973 at File. All 400 REAL–FAKE rank pairs in known40 remained unchanged. Some pairs improved in retention100, but its EER remained 0.02. The public measurements therefore support **a change that propagated but did not move the EER boundary enough**, rather than a change that never took effect. They do not prove the composition of the hidden server data.
 
-C710은 평균의 영향을 없애고 C465를 단독으로 넣었다. 선택 오류 패널의 EER은 크게 좋아졌지만 개선이 Riffusion에 편중되었고, 다른 조건에는 퇴행 경고가 있었다. 서버 ADS는 **0.8353809524**로 하락했다. C180과의 평균은 단순한 희석이 아니라 보완 역할을 하고 있었을 가능성이 있다. 단독 모델 개선 폭을 최종 ADS 개선으로 환산할 수 없다는 사례다.
+C710 removed the averaging step and used C465 alone. EER improved sharply on the selected-error panel, but the gains were concentrated in Riffusion, with regression warnings in other conditions. Server ADS fell to **0.8353809524**. Averaging with C180 may have provided complementary evidence rather than merely diluting C465. This was another example of why I could not convert a standalone model's improvement directly into an expected final ADS gain.
 
-C722는 File 음성 경로의 raw/stem `max`를 평균으로 바꿨다. known40·오류 패널·일부 혼합 자료는 좋아졌으나 retention100 EER이 **0.02→0.04**로 나빠졌다. 서버 ADS도 **0.8341666667**로 하락했다. 당시에는 이미 공개 검증에 보존 실패가 드러나 있었다. 이 결과를 오직 ‘서버 분포가 예상과 달랐다’로 설명하면 안 된다. 제출 판단에서 보존 패널의 경고를 충분히 반영하지 못한 것도 실패 원인이었다.
+C722 replaced the raw/stem `max` in the File voice path with a mean. It improved known40, the error panel, and some mixed-audio data, but retention100 EER worsened from **0.02 to 0.04**. Server ADS also fell, to **0.8341666667**. The retention failure had already appeared in public validation. I should not explain the result solely as a mismatch with the server distribution: I also failed to give the retention-panel warning enough weight when deciding to submit.
 
-C723의 내부 Spectra 변경도 EER 동률·AUC 하락으로 기각했다. 이후에는 기존 최고 C693을 고정 대조군으로 두고, 얻은 정답뿐 아니라 잃은 정답과 순위쌍을 함께 기록하는 방향으로 바꿨다.
+I rejected C723's internal Spectra change because EER tied while AUC declined. From then on, I used the best C693 model as a fixed control and recorded lost correct decisions and rank pairs alongside recovered ones.
 
-근거: `docs/C704_SERVER_TIE_AND_NEXT_2026-09-25.md`, `docs/C710_SERVER_REGRESSION_AND_LESSON_2026-09-26.md`, `docs/C722_SERVER_FAILURE_AND_RESEARCH_RESET_2026-09-27.md`.
+Evidence: `docs/C704_SERVER_TIE_AND_NEXT_2026-09-25.md`, `docs/C710_SERVER_REGRESSION_AND_LESSON_2026-09-26.md`, `docs/C722_SERVER_FAILURE_AND_RESEARCH_RESET_2026-09-27.md`.
 
-### 4.3 C724–C728: 모델 문제와 평가 해석 문제를 분리
+### 4.3 C724–C728: Separating model weaknesses from evaluation mistakes
 
-C724 순수 음성 40개에서는 C660과 C693의 관련 경로가 모두 EER 0 / AUC 1이었다. 이것은 음성 문제가 전혀 없다는 뜻이 아니라 해당 작은 공개 패널에서 오류를 찾지 못했다는 뜻이다. 일부 자료 이름에 telephone/G711이 있었지만 실제 입력은 다른 crop의 16 kHz µ-law였다. 실제 8 kHz 대역 제한 전화 음성과 동일시할 수 없고, crop과 codec의 인과 효과도 분리되지 않았다.
+On C724's 40 pure-speech files, all relevant paths in C660 and C693 had EER 0 / AUC 1. That means I found no errors on that small public panel, not that the models had no speech-related weaknesses. Some source names included telephone/G711, but the actual inputs were 16 kHz µ-law with different crops. They were not equivalent to genuinely 8 kHz band-limited telephone speech, and the causal effects of cropping and codec were not isolated.
 
-C725 혼합 12개도 두 버전 모두 0/1이었다. 과거 two-phase EER 0.20은 현재 C660이 아니라 old C349/C51의 수치였다. 같은 입력과 현재 계산 경로로 다시 확인한 C660 clear60은 EER 0.10 / AUC 0.9788889, two-phase20은 0.10 / 0.94였다. **틀린 baseline을 고치는 것은 새 모델의 성능 개선이 아니다.**
+C725's 12 mixed-audio files also produced 0/1 for both versions. The historical two-phase EER of 0.20 belonged to old C349/C51, not current C660. Rechecking the same inputs with the current computation path gave C660 clear60 EER 0.10 / AUC 0.9788889, and two-phase20 0.10 / 0.94. **Correcting a mistaken baseline is not a new model improvement.**
 
-C726은 잔여 오류를 골라 두 파일만 진단했다. C693에서도 REAL File 0.851193 > FAKE File 0.698159의 잘못된 순위가 남았다. 원음/분리음 DF 증거, 정렬, presence 가중, event 집계에서 양성 증거가 약해지는 지점을 관찰했다. 오류선택 2개로 일반 EER이나 ADS를 보고하지 않았다. 이 과정의 첫 버전은 원 DF margin 재생 오차 1.1444e-5가 1e-5 허용치를 넘어 중단됐다. 입력·모델 검사 후 별도 버전에서 margin과 확률을 함께 검증하도록 검토했으며, RAM 중단이나 서버 성능 실패와 구분했다.
+For C726, I selected just two residual-error files for diagnosis. C693 still ranked the REAL file at 0.851193 above the FAKE file at 0.698159. I examined where positive evidence weakened across raw/stem DF evidence, alignment, presence weighting, and event aggregation. I did not report a general EER or ADS from two error-selected files. The first implementation stopped because an original-DF margin replay difference of 1.1444e-5 exceeded the 1e-5 tolerance. After checking the input and model, I reviewed a separate version designed to check both margins and probabilities. I distinguished this numerical replay issue from a RAM stop or a server-performance failure.
 
-C727은 보존된 실제 TRAIN 네 개를 조사했다. 두 FAKE의 qVoice가 원 경로 대비 0.853052→0.779118, 0.700059→0.435671로 약해졌고, 특히 분리음 DF margin의 손실이 컸다. C728은 overlap16 + partial16의 실제 TRAIN 32개, 96개 창으로 넓혔다. FAKE BCE는 0.112436→0.196296으로 악화했지만 REAL BCE는 0.126069→0.072920으로 개선됐다. overlap FAKE 8개 중 7개, partial FAKE 8개 중 3개가 악화했다. ‘모든 부분위조가 악화했다’는 주장과는 다르다.
+C727 inspected four retained actual TRAIN files. For its two FAKE files, qVoice weakened from the original path's 0.853052 to 0.779118 and from 0.700059 to 0.435671, with particularly large losses in the separated-audio DF margins. C728 expanded the diagnosis to 32 actual TRAIN files—overlap16 plus partial16—and 96 windows. FAKE BCE worsened from 0.112436 to 0.196296, while REAL BCE improved from 0.126069 to 0.072920. Seven of eight overlap FAKE files and three of eight partial FAKE files worsened. This is not the same as saying that all partially manipulated files worsened.
 
-partial FAKE의 첫 창은 대부분 REAL이고 FAKE가 600 sample만 포함되는 경우가 있다. 파일의 FAKE 라벨을 모든 창에 그대로 복제하면 잘못된 학습 목표가 된다. 이후에는 배포 시점의 시간 집계를 포함한 **파일/bag 단위 손실**을 검토했다.
+The first window of a partial FAKE file can be mostly REAL, with only 600 FAKE samples. Copying the file's FAKE label to every window would create an incorrect training target. I therefore investigated **file/bag-level losses** that included the temporal aggregation used at deployment.
 
-### 4.4 C729–C742: 보존 제약과 작은 head의 한계
+### 4.4 C729–C742: Retention constraints and the limits of small heads
 
-| 계열 | 실제 변경과 TRAIN 관측 | 공개 전이 / 결정 |
+| Family | Actual change and TRAIN observation | Public transfer / decision |
 |---|---|---|
-| C729 | C688 마지막 block+fc5를 16 update. 새 32개 BCE 0.134608→0.108496 개선 | old speech 오류 68→74, 반대 방향 최대 drift 0.329683 > 0.10, native File 상승도 예산 초과. 공개 전이 전에 기각 |
-| C730–C733 | frozen C688의 CLS 692개를 저장하고 fc5 2,562개 파라미터만 학습. old 오류 68→66, 새 BCE 0.132018 | known40 EER 0.05 동률; error41 EER 0.343137 동률·AUC 하락. strict-gain 실패로 기각 |
-| C734–C736 | bias/block 고정, 1,280차원 contrast 변화로 paired ranking 학습. native REAL은 감소, 새 BCE 미세 개선 | known/error EER 동률. TRAIN 순위 손실이 미세 개선해도 실제 순위 교정은 없었음 |
-| C737–C739 | clean→mix 교사 증거 복구와 보존 제약을 검토 | 수치/사전 기준 실패. C739의 복구 9.69는 고정 기준 10 미달. 사후 기준 완화로 구제하지 않음 |
-| C740–C742 | 고정 644 TRAIN 보존 제약 아래 mixed source-proxy BCE 최적화. old 오류 68→47(21 회복/0 손실), mix 오류 62→42 | known EER 동률·AUC 0.9925→0.9875; error EER 동률·AUC 소폭 개선. 필수 EER 이득이 없어 기각 |
+| C729 | 16 updates to C688's final block+fc5; new32 BCE improved from 0.134608 to 0.108496 | Old-speech errors rose from 68 to 74, maximum opposite-direction drift was 0.329683 > 0.10, and native File increases exceeded budget. I rejected it before public transfer. |
+| C730–C733 | Cached 692 CLS vectors from frozen C688 and trained only fc5's 2,562 parameters; old errors fell from 68 to 66 and new BCE reached 0.132018 | Known40 EER tied at 0.05; error41 EER tied at 0.343137 with lower AUC. I rejected it for failing the strict-gain requirement. |
+| C734–C736 | Fixed bias/block and trained a 1,280-dimensional contrast change with paired ranking; native REAL scores decreased and new BCE improved slightly | Known/error EER tied. Tiny improvements in TRAIN ranking loss produced no actual rank corrections. |
+| C737–C739 | Investigated clean→mix teacher-evidence recovery under retention constraints | Numerical or predefined acceptance checks failed. C739 recovered 9.69 against a fixed requirement of 10; I did not relax the criterion after seeing the result. |
+| C740–C742 | Optimized mixed source-proxy BCE under 644 fixed TRAIN retention constraints; old errors fell from 68 to 47 (21 recoveries, 0 losses), and mix errors from 62 to 42 | Known EER tied while AUC fell from 0.9925 to 0.9875; error EER tied while AUC improved slightly. I rejected it because the required EER gain was absent. |
 
-C729는 약한 one-sided retention 손실을 한 번씩 준다고 이후 update의 drift까지 보장되는 것은 아니라는 점을 보여줬다. `max(raw, stem)`는 승자 경로에만 gradient가 흐르므로 두 경로가 동시에 개선된다고도 말할 수 없다. block과 head를 함께 바꿨으므로 실패를 block 하나의 탓으로 단정하지 않았다.
+C729 showed that applying a weak one-sided retention loss once does not guarantee protection against drift from later updates. The `max(raw, stem)` operation sends gradients only through the winning path, so I could not claim that both paths improved simultaneously. Because I changed the block and head together, I did not attribute the failure to the block alone.
 
-C731/C734의 변화가 작았다는 이유만으로 모든 head-only 접근이 불가능하다고 결론 내리지 않았다. C740은 실제 TRAIN 오류를 상당히 고쳤지만 공개 전이에서 필요한 순위 교정으로 이어지지 않았다. 이는 단순히 학습량이 적었다는 설명보다 **목표 함수·지원 자료·최종 결합 경로의 불일치**를 다시 볼 근거였다. 반복 사용된 공개 패널이므로 통과하더라도 독립 holdout 성공이라고 부르지 않는다.
+I did not conclude that all head-only approaches were impossible just because C731/C734 made small changes. C740 corrected many actual TRAIN errors, but those gains did not translate into the rank corrections needed in public transfer. That result pointed me back to **mismatches between the objective, the supporting data, and the final fusion path**, rather than simply too little training. These were repeatedly used public panels, so even a pass would not have been success on an independent holdout.
 
-코드 운영 오류도 따로 보존했다. C741 V1의 relative/absolute 경로 receipt 비교 실패는 NN 실행 전 검증 오류였고, V2에서 경로·크기·SHA를 엄격히 해석하는 방식으로 교정했다. 학습·모델·성능 기준을 바꾼 것이 아니었다. 기각 후보의 과거 checkpoint를 골라 다시 내거나 LR/alpha를 사후 탐색하지 않았다.
+I also retained implementation failures separately. C741 V1's relative-versus-absolute receipt-path comparison failed before any neural-network execution. V2 corrected it by resolving and checking the path, size, and SHA strictly; it did not change the training, model, or performance criteria. I did not rescue rejected candidates by selecting an earlier checkpoint or searching LR/alpha after the evaluation.
 
-근거: `research/c729_deployed_event_tail/RESULT_AND_NEXT.md`, `research/c731_fc5_only_deployed_event/TRAIN_AUDIT_DECISION.md`, `research/c734_pair_rank_contrast/TRAIN_AUDIT_DECISION.md`, `research/c740_bounded_mix_classification/TRAIN_AUDIT_DECISION.md`, `research/c742_c740_late_transfer/RESULT_AND_NEXT.md`.
+Evidence: `research/c729_deployed_event_tail/RESULT_AND_NEXT.md`, `research/c731_fc5_only_deployed_event/TRAIN_AUDIT_DECISION.md`, `research/c734_pair_rank_contrast/TRAIN_AUDIT_DECISION.md`, `research/c740_bounded_mix_classification/TRAIN_AUDIT_DECISION.md`, `research/c742_c740_late_transfer/RESULT_AND_NEXT.md`.
 
-### 4.5 C743–C753: 음악 readout과 event 목표를 직접 학습했지만 전이는 실패
+### 4.5 C743–C753: Direct music-readout and event learning still failed to transfer
 
-C742의 경로 진단에서는 일부 선택 FAKE 오류의 qMusic이 판단을 지배하는 반면 qVoice는 매우 낮았다. 음악 증거를 직접 개선할 필요를 시사하지만 source-proxy 라벨만으로 개별 성분의 진위를 확정하거나 서버 구성비를 추론한 것은 아니다.
+C742's path diagnosis showed qMusic dominating some selected FAKE errors while qVoice was very low. This suggested a need to improve music evidence directly. Source-proxy labels, however, did not establish the authenticity of individual components or reveal server dataset proportions.
 
-C743/C744는 원 EAT의 보존된 특징과 추가 native 72부모의 144파생뷰를 사용하여 마지막 Linear 195개 파라미터만 6 epoch, 1,704 update 학습했다. 새 자료 BCE는 0.706226→0.677582였지만 old 교사 SmoothL1 0.012252가 0.01 기준을 넘고, 새 REAL BCE 상승도 +0.016517로 +0.01 예산을 넘었다. 기각했다. 모든 확률이 올라간 관측을 곧바로 ‘bias 하나가 원인’이라고 단정하지는 않았다.
+C743/C744 used retained original-EAT features and 144 derived views from 72 additional native parents to train only 195 last-Linear parameters for 6 epochs and 1,704 updates. New-data BCE improved from 0.706226 to 0.677582, but old-teacher SmoothL1 reached 0.012252, above the 0.01 limit. The increase in new REAL BCE, +0.016517, also exceeded its +0.01 budget. I rejected the model. Although all probabilities increased, I did not treat that observation alone as proof that a single bias term caused the failure.
 
-C745는 bias를 고정하고 192개 contrast 변화에 REAL 보존 제약을 걸었다. TRAIN 수치 기준을 통과했지만 공개 known/error EER은 동률이라 기각했다. C748/C749는 File에 직접 들어가는 잔차 readout을 시험했으나 TRAIN32 EER 0.0625 / AUC 0.9921875 동률, 순위쌍 교정 0이었다. 아주 작은 BCE 감소만으로 대규모 후속 평가나 제출을 진행하지 않았다.
+C745 fixed the bias and constrained 192 contrast changes to preserve REAL behavior. It passed the TRAIN numerical checks, but public known/error EER tied, so I rejected it. C748/C749 tested a residual readout injected directly into File, but TRAIN32 EER 0.0625 / AUC 0.9921875 tied, with zero rank-pair corrections. I did not use a tiny BCE reduction to justify a large follow-up evaluation or submission.
 
-C751은 선택 기준을 고정한 실제 음악 네 출처에서 DF 잔여 오류가 반복되는지 확인했다. 원 DF의 raw OR stem 오류 그룹 3개가 C688에서는 0개였다. 사전 확대 조건인 현재 오류 그룹 ≥2에 못 미쳐, 오류가 나올 때까지 데이터를 더 찾거나 학습을 진행하지 않았다.
+C751 checked whether residual DF errors recurred across four real-music sources selected by a fixed rule. The original DF had errors in three groups under the raw OR stem criterion; C688 had none. This failed the predefined expansion condition of at least two current-error groups. I did not keep looking for data until an error appeared or proceed to training.
 
-C752/C753은 기존 Music source-authenticity 점수가 아닌 **Music-event bag 자체**를 학습하는 마지막 접근이었다. C752가 원 EAT의 200개 파일/280창 특징을 추출했고(전체 단계에서 성공 4창 재사용·276창 새 추출), C753이 그 특징을 재사용했다. PANN presence와 정확한 창 overlap, robust top 집계를 포함한 193개 readout 파라미터를 5 source fold로 학습했다. 공개 구성·event 라벨과 nullable 성분 마스크는 그대로 두고 모르는 성분 정답을 proxy로 채우지 않았다. File200은 구성·출처 기준 70 REAL / 130 FAKE이며, 대회의 공식 정답이 아니다.
+C752/C753 was my final approach: learning the **Music-event bag itself**, rather than another Music source-authenticity score. C752 extracted original-EAT features for 200 files / 280 windows, reusing 4 successful windows and extracting 276 new ones in the full stage. C753 reused those features. I trained 193 readout parameters over 5 source folds, incorporating PANN presence, exact window overlap, and robust top aggregation. I preserved the public construction/event labels and nullable component masks instead of filling unknown component labels with proxies. File200 contained 70 REAL and 130 FAKE files by construction/source labeling, not official competition ground truth.
 
-| 마지막 C753 평가 | 고정 historical matched5(C479) | 새 event readout |
+| Final C753 evaluation | Fixed historical matched5 (C479) | New event readout |
 |---|---:|---:|
-| pooled Music-event EER | 0.2145833333 | 0.2604166667 |
-| pooled Music-event AUC | 0.864479 | 0.819479 |
-| 구성·출처 File EER | 0.1296703297 | 0.1296703297 |
-| 구성·출처 File AUC | 0.939890 | 0.926923 |
+| Pooled Music-event EER | 0.2145833333 | 0.2604166667 |
+| Pooled Music-event AUC | 0.864479 | 0.819479 |
+| Construction/source File EER | 0.1296703297 | 0.1296703297 |
+| Construction/source File AUC | 0.939890 | 0.926923 |
 
-일부 overlap/partial에서는 이득이 있었지만 pure music 및 다른 혼합 조건의 손실이 더 컸다. 5 fold 실행·노출·저장 복원 검사는 정상이며 RAM 중단 때문에 나온 결과가 아니다. 원 warm bias 연산 순서의 FP32 차이는 별도 V2로 정확히 보존하여 교정했고 허용오차를 늘려 넘기지 않았다. 최종 all200 학습, 새 제출 ZIP, 후속 공개 전이는 진행하지 않았다.
+Some overlap/partial conditions improved, but losses in pure music and other mixed conditions outweighed them. The five-fold execution, exposure, and save/restore checks passed; this was not a result caused by a RAM interruption. I corrected the FP32 operation-order difference in the original warm bias through a separate V2 that preserved the exact calculation, rather than loosening the tolerance. I did not run a final all200 fit, create another submission ZIP, or continue public transfer.
 
-**사용자가 2026-09-28 연구 종료를 요청했다.** 자동 재개 예약을 중지했고 연구·학습은 재개하지 않았다. 이후의 작업은 이 기록과 최고 모델의 소스 보존이다. C753 이후 아이디어는 실행 결과가 아니므로 성과 목록에 넣지 않는다.
+**I ended the research on 2026-09-28.** I stopped the automatic-resume schedule and did not restart research or training. The work after that point was limited to this retrospective and preservation of the best model's source. Ideas after C753 are not executed results, so I do not list them as achievements.
 
-## 5. 전체 시행착오에서 남긴 결론
+## 5. Lessons from the full sequence of experiments
 
-1. **단독 탐지기보다 최종 출력까지의 경로를 먼저 검증해야 했다.** C660과 C693의 실제 서버 상승은 증거 전달과 제한된 내부 경로 개선에서 나왔다. 반대로 단독 모델 EER 개선을 더하면 예상 ADS가 된다는 계산은 성립하지 않는다.
-2. **확률이 달라졌다는 것과 EER이 좋아졌다는 것은 다르다.** 단계별 변화량, REAL–FAKE 순위쌍, 새로 얻은/잃은 정답을 같이 봐야 한다. 서버 동점은 숨은 데이터의 유형 부재나 구현 무시를 증명하지 않는다.
-3. **개발 자료가 늘어도 독립성이 늘어난 것은 아니었다.** 동일 부모의 crop/codec/혼합 변형은 같은 출처다. repeated OOF, 오류선택 패널, 학습에 기소비된 공개 자료를 fresh holdout이라고 부르지 않는다.
-4. **모르는 라벨은 모르는 상태로 남겨야 한다.** 음원의 REAL/FAKE 출처 proxy와 File/Voice/Music/event/presence 정답은 다르다. 부분위조의 파일 라벨을 모든 창에 복사하는 것도 잘못된 감독 신호가 될 수 있다.
-5. **보존 실패는 제출을 멈출 충분한 이유였다.** C722는 공개 retention 악화가 이미 있었고 서버도 하락했다. 한 패널의 큰 이득으로 다른 패널의 손실을 가리는 선택은 위험했다.
-6. **실행 무결성과 모델 성능을 별개로 기록해야 했다.** 경로 pin, FP32 연산 순서, historical baseline 혼동 같은 오류는 실제로 발견했다. 그러나 그것만으로 수백 번의 모든 실패를 코드 탓으로 돌릴 수 없다. 정정 후에도 전이 실패한 모델은 실패로 남겼다.
-7. **자원 사용도 연구 설계의 일부였다.** 원 encoder 공유, cached prefix/CLS, 작은 head와 strict resume로 불필요한 반복을 줄였다. 긴 작업은 실제 시작·진행 증거와 실측 ETA를 확인한 뒤 자동 재개했고, 최종 종료 후에는 예약도 중지했다.
-8. **대회 점수와 권리 문제를 분리해야 했다.** 목표 ADS 0.85는 달성하지 못했다. 자료·모델의 비영리 사용 허용이 코드 공개·가중치 재배포·수상 시 권리 이전을 자동으로 허용하지 않는다. 이 저장소는 그 권리를 새로 부여하지 않는다.
+1. **I needed to verify the path to the final output before adding standalone detectors.** The actual server gains from C660 and C693 came from evidence routing and targeted internal-path improvements. Adding standalone EER gains does not yield an expected ADS gain.
+2. **Different probabilities do not necessarily mean better EER.** I needed stage-by-stage changes, REAL–FAKE rank pairs, and newly gained/lost correct decisions together. A server tie does not prove that an audio type was absent from the hidden data or that the implementation was ignored.
+3. **More development examples did not necessarily mean more independent evidence.** Crops, codecs, and mixtures from the same parent share their source. Repeated OOF, error-selected panels, and previously consumed public training material are not fresh holdouts.
+4. **Unknown labels needed to stay unknown.** Source REAL/FAKE proxies differ from File, Voice, Music, event, and presence labels. Copying a partially manipulated file's label to every window can also create incorrect supervision.
+5. **A retention failure was enough reason not to submit.** C722 had already worsened public retention before its server score fell. A large gain on one panel could conceal a meaningful loss on another.
+6. **I needed separate records for execution integrity and model performance.** I found real issues involving path pins, FP32 operation order, and historical-baseline confusion. They do not justify attributing every failure across hundreds of stages to code. Models that still failed to transfer after correction remained failures in my record.
+7. **Resource use was part of the research design.** Shared encoders, cached prefixes/CLS, small heads, and strict resume reduced unnecessary repetition. For long jobs, I checked actual startup and progress, estimated completion from measured speed, and used scheduled resumption. I stopped that schedule when I ended the research.
+8. **Competition scores and rights clearance were separate questions.** I did not reach ADS 0.85. Permission for noncommercial use of data or models does not automatically permit code publication, weight redistribution, or transfer of rights upon winning. This repository grants no new rights to those assets.
 
-가장 중요한 개선점은 다음 프로젝트에서 먼저 고칠 프로세스다. 부모/출처 단위로 잠근 검증을 일찍 만들고, 처음부터 실제 제출 계산 경로를 평가하며, 구성요소별 라벨 범위를 명시하고, 새 후보의 이득·손실·자원·권리를 하나의 사전 기준으로 판단하는 것이다. 이것은 이번 미달 결과를 성공으로 바꾸는 설명이 아니라, 실패를 반복하지 않기 위한 기록이다.
+The most important improvements now concern how I would organize the next project: establish parent/source-separated validation early, evaluate the real submission computation path from the start, make each component's label scope explicit, and judge a candidate's gains, losses, resource cost, and rights against predefined criteria. This does not turn the missed target into a success; it records how I intend to avoid repeating the same failures.
 
-## 부록 A. 보존된 C-번호 연구 기록 색인
+## Appendix A. Index of retained C-number research records
 
-2026-09-28 파일시스템 스냅샷에서 **656개 C-번호 / 704개 디렉터리**를 찾았다. 최고 번호는 C753다.
-이는 완료한 학습 횟수가 아니다. 번호에는 설계, 자료 준비, 코드 감사, 특징 추출, 실패, 평가, 패키징도 포함된다. V1~V5 및 기타 이름의 초기 연구는 본문에서 별도로 다룬다.
-아래 경로는 보존된 원 작업공간을 추적하기 위한 상대 경로이며, 대용량 원 기록 전체를 이 저장소에 업로드했다는 뜻이 아니다. JSON 색인에는 대표 기록의 크기와 SHA-256도 포함한다.
+I found **656 C identifiers across 704 directories** in the filesystem snapshot of 2026-09-28. The highest identifier was C753.
+This is not a count of completed training runs: the identifiers also cover design, data preparation, code audits, feature extraction, failures, evaluation, and packaging. I discuss V1–V5 and other early work with different names separately in the main text.
+The paths below are relative paths into the retained original workspace. They do not mean that the complete underlying records or large assets have been uploaded to this repository. The JSON inventory also includes sizes and SHA-256 hashes for representative evidence files.
 
-| 번호 | 보존된 연구/단계 디렉터리 | 대표 근거 파일(원 작업공간) |
+| Identifier | Retained research/stage directories | Representative evidence files (original workspace) |
+
 |---|---|---|
 | C56 | `research/c56_fourier_moe` | `research/c56_fourier_moe/C56_STOP_REPORT.md` |
 | C63 | `research/c63_fourier_extratrees` | `research/c63_fourier_extratrees/C63_STOP_REPORT.md` |

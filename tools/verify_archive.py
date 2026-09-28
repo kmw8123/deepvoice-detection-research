@@ -63,6 +63,11 @@ def verify():
             continue
         if "\ufffd" in text or "\x00" in text:
             errors.append("Invalid text marker: " + rel)
+        if re.search(r"[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]", text):
+            errors.append("Untranslated Korean text: " + rel)
+        if rel in {"README.md", "EXPERIMENTS.md", "MODEL_CARD.md", "REPRODUCIBILITY.md", "THIRD_PARTY_NOTICES.md", "LICENSE_POLICY.md"}:
+            if re.search(r"\b(?:the user (?:reported|provided|requested|said|instructed)|user-reported|provided by the user)\b", text, re.I):
+                errors.append("Assistant-perspective attribution in authored prose: " + rel)
         if suspicious.search(text):
             errors.append("Credential or personal-path pattern: " + rel)
         if path.suffix == ".py":
@@ -91,6 +96,7 @@ def verify():
         "local_document_links_checked": links_checked,
         "registered_C_ids": inventory["registered_C_ids"],
         "directory_count": inventory["directory_count"],
+        "editorial_checks": "No untranslated Korean text; authored prose excludes assistant-perspective user attribution. Original third-party notices are preserved.",
         "secret_scan_limit": "Pattern scan plus human review, not a proof that every possible secret is absent.",
         "errors": errors,
     }

@@ -13,13 +13,13 @@
     },
     {
       "path": "annotated/c693_tail.py",
-      "bytes": 5744,
-      "sha256": "c047e0edb190b603b3699be4f439714ee333b51e4d84f3b5a51318a8ce501c2b"
+      "bytes": 5708,
+      "sha256": "4ccd50fc445bc234b9c233da76e45303f17f706ee6e2a6410029a145088e862e"
     },
     {
       "path": "annotated/script.py",
-      "bytes": 74479,
-      "sha256": "1ff0291ff3585bdfb55217e6f70dbafecdcc228ee9778cb83ae4de18651b5a60"
+      "bytes": 74526,
+      "sha256": "f7e966e40d3bec928fd9cbc975a377325baae61adb5c4930a3ae77e72f0d0b22"
     },
     {
       "path": "experiment_inventory.json",
@@ -28,18 +28,18 @@
     },
     {
       "path": "EXPERIMENTS.md",
-      "bytes": 176266,
-      "sha256": "22bf4cefc80816158a1438f401bb8f63db3805e8f15b01a439dfd4e00fd60562"
+      "bytes": 184507,
+      "sha256": "34980e081abde459b69c04120026d590e3feaeeff41ef556ca34cc8b853fd844"
     },
     {
       "path": "LICENSE_POLICY.md",
-      "bytes": 3209,
-      "sha256": "4f8f1e0dc4c382f3f146376d39f66728d1cfcb7f0c77b392a31c1182ad29e01d"
+      "bytes": 3351,
+      "sha256": "6e56a0f44a11ebdc37c3025e4e182cb115c18ddbb11b7b2ef7972614326f1d48"
     },
     {
       "path": "MODEL_CARD.md",
-      "bytes": 8579,
-      "sha256": "1dc945629152c9fbfe84437c700ad24b8fff422fcdff34645942eb637e9a3ab7"
+      "bytes": 9093,
+      "sha256": "9cb8f2f90c445faafe2ce7f6a552f54d4abc17455a0f23d5d402f5cd1e863a7a"
     },
     {
       "path": "notices/C693_PROVENANCE.md",
@@ -104,17 +104,17 @@
     {
       "path": "provenance/source_manifest.json",
       "bytes": 8646,
-      "sha256": "96efff959d95a4bff3b4b20c192345d975c9d64657f95e4580d5cf49dd58c726"
+      "sha256": "bb5573603a65555da8dab981311af90b682f133e2750261031c525b7a0d247b5"
     },
     {
       "path": "README.md",
-      "bytes": 4514,
-      "sha256": "1ab77c1079e139375892a1088e8ba88cf6b18e8d007482d803604fc96404d564"
+      "bytes": 4491,
+      "sha256": "db0cbda4cff891c753c33286365f37fd6c90282efe819bace1ddf03dcb700a5a"
     },
     {
       "path": "REPRODUCIBILITY.md",
-      "bytes": 8599,
-      "sha256": "f0621ad6cd52c36f5b8480f627dd6ac4fb0c1ee50331137197fc3c803bfce5ba"
+      "bytes": 9029,
+      "sha256": "4015868f08b7cbe72154b92fcfe8f6cd42e2c5b5abb36d989c32ace0a3604025"
     },
     {
       "path": "src/c693_tail.py",
@@ -173,13 +173,13 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "bytes": 5223,
-      "sha256": "df37c378cbd56a46328a10a348bf0902f738279b9c68dce3bf26f33eeb762fe1"
+      "bytes": 5664,
+      "sha256": "d82df038fd411bbd7d4d4c0665fbcaca834f1abfd6c95d4dbe323bcee15fc406"
     },
     {
       "path": "tools/verify_archive.py",
-      "bytes": 5362,
-      "sha256": "667485688cb8f5184c5147e551fc0c2eb86ffc4c6504f793c30bc8ad1c9f2659"
+      "bytes": 6038,
+      "sha256": "460378f60cf3d3190abeeb8ef75de41f8a8c3921cf95ea0fc82188548d4c10a7"
     }
   ]
 }

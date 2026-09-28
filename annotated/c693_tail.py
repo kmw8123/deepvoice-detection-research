@@ -1,5 +1,5 @@
-# 보관용 주석 사본. 원본은 ../src/c693_tail.py이며 실행 AST는 원본과 동일하게 유지한다.
-# 별도 tail의 상류 라이선스/비상업 조건은 ../THIRD_PARTY_NOTICES.md를 함께 읽어야 한다.
+# Annotated archive copy. I keep the executable AST identical to the original at ../src/c693_tail.py.
+# See ../THIRD_PARTY_NOTICES.md for the separate tail's upstream license and noncommercial terms.
 """Frozen C688 tail, sharing one original DF-Arena forward per audio batch.
 
 The caller provides the offline DF model in FP32 eval mode and puts batches
@@ -19,8 +19,8 @@ CHECKPOINT_BYTES = 172585774
 
 
 class LastBlockAndHead(torch.nn.Module):
-    # 원 DF의 마지막 Conformer block + fc5를 복사해 학습한 43,137,922개 파라미터.
-    # 비싼 1B encoder를 추가 복제/재학습하는 것이 아니다.
+    # I copied and trained the original DF's final Conformer block + fc5: 43,137,922 parameters.
+    # This does not duplicate or retrain the expensive 1B encoder.
     def __init__(self):
         super().__init__()
         self.block = ConformerBlock(
@@ -35,13 +35,13 @@ class LastBlockAndHead(torch.nn.Module):
 
     def forward(self, hidden):
         features, _ = self.block(hidden)
-        # CLS 위치만 사용한다. 시간축 mean pooling으로 바꾸면 다른 모델이 된다.
+        # Use only the CLS position. Replacing this with temporal mean pooling would change the model.
         return self.fc5(features[:, 0, :])
 
 
 def load_tail(path, device):
     """Load the pinned local C688 state_dict strictly with weights_only=True."""
-    # 정확한 최종128 체크포인트만 허용한다. 새로운 후보/기타 크기의 가중치 자동 대체 없음.
+    # Accept only the exact final update-128 checkpoint; do not substitute another candidate or weights of a different size.
     path = Path(path)
     if path.stat().st_size != CHECKPOINT_BYTES:
         raise ValueError(f"C688 checkpoint size mismatch: {path}")
@@ -90,8 +90,8 @@ def forward_shared(df_model, tail, batch):
         captured.append(args[0].detach().clone())
 
     hook = df_model.backbone.conformer.encoder_blocks[3].register_forward_pre_hook(capture_prefix)
-    # 네 번째 Conformer block 직전 [B,202,1280]을 원 forward에서 한 번만 캡처한다.
-    # 원 모델은 끝까지 실행해 외부 Voice용 원 logits를 만들고, tail은 File용 logits를 만든다.
+    # Capture [B,202,1280] immediately before the fourth Conformer block, once during the original forward pass.
+    # The original model completes its forward pass for external Voice logits; the tail produces logits for File.
     try:
         with torch.no_grad(), torch.autocast(device_type=batch.device.type, enabled=False):
             original_logits = df_model(input_values=batch)["logits"]
@@ -111,5 +111,5 @@ def forward_shared(df_model, tail, batch):
                     raise RuntimeError(f"{name} logits contain non-finite values")
             return original_logits.float(), learned_logits.float()
     finally:
-        # 예외가 생겨도 hook을 제거하여 다음 파일에 상태가 누적되지 않도록 한다.
+        # Remove the hook even on an exception, preventing state from accumulating across files.
         hook.remove()

@@ -161,7 +161,7 @@
       "original": "src/script.py",
       "annotated": "annotated/script.py",
       "original_sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84",
-      "annotated_sha256": "1ff0291ff3585bdfb55217e6f70dbafecdcc228ee9778cb83ae4de18651b5a60",
+      "annotated_sha256": "f7e966e40d3bec928fd9cbc975a377325baae61adb5c4930a3ae77e72f0d0b22",
       "ast_identical": true,
       "scope": "comments only; no execution or numerical test"
     },
@@ -169,7 +169,7 @@
       "original": "src/c693_tail.py",
       "annotated": "annotated/c693_tail.py",
       "original_sha256": "f178536cc58858d7415ae5f651fa3bf7a79e48ed09c791e14b5cb14965ab1e0c",
-      "annotated_sha256": "c047e0edb190b603b3699be4f439714ee333b51e4d84f3b5a51318a8ce501c2b",
+      "annotated_sha256": "4ccd50fc445bc234b9c233da76e45303f17f706ee6e2a6410029a145088e862e",
       "ast_identical": true,
       "scope": "comments only; no execution or numerical test"
     }

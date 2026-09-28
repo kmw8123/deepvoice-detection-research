@@ -8,6 +8,7 @@
   "local_document_links_checked": 30,
   "registered_C_ids": 656,
   "directory_count": 704,
+  "editorial_checks": "No untranslated Korean text; authored prose excludes assistant-perspective user attribution. Original third-party notices are preserved.",
   "secret_scan_limit": "Pattern scan plus human review, not a proof that every possible secret is absent.",
   "errors": []
 }

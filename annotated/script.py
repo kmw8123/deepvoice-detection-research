@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# 보관용 설명 사본(2026-09-28): 원 C693의 실행문은 그대로 두고 주석만 추가했다.
-# byte-identical 원본은 ../src/script.py, 구조·권리·재현 한계는 ../MODEL_CARD.md 참고.
-# 이 디렉터리는 실행용 제출 패키지가 아니다. 가중치·상류 구현·전체 manifest가 없다.
+# Archive annotation copy (2026-09-28): I added comments and kept C693's executable statements unchanged.
+# The byte-identical original is ../src/script.py; see ../MODEL_CARD.md for architecture, rights, and reproduction limits.
+# This directory is not an executable submission package: weights, upstream implementations, and the full manifest are absent.
 """DACON 236749 C693 fixed C688 native-domain tail, File-only integration.
 
 All C596 models, weights, preprocessing, windows and component/presence outputs
@@ -47,7 +47,7 @@ DEFAULT_SAMPLE_SUBMISSION = BASE_DIR / "data" / "sample_submission.csv"
 DEFAULT_OUTPUT_PATH = BASE_DIR / "output" / "submission.csv"
 
 # All network-capable model loaders must stay offline.
-# 평가 중 다운로드·학습 없이 같은 파일의 정보만 사용한다. 경로별 모델은 로컬 자산이다.
+# Evaluation uses only information from the current file, with no downloads or training. Each model path points to local assets.
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_DATASETS_OFFLINE"] = "1"
@@ -63,7 +63,7 @@ SILENCE_RMS = 1e-5
 # Fixed, per-file limits make the worst-case runtime independent of file order.
 # Six uniformly spaced crops cover a 60 second file at roughly 10 second gaps.
 MAX_DF_SEGMENTS = 6
-# 6개 균등 crop의 제한이지 긴 음원 전체의 모든 순간을 빠짐없이 검사한다는 뜻은 아니다.
+# This limits sampling to six uniformly placed crops; it does not inspect every instant of a long recording.
 MAX_SONICS_SEGMENTS = 12
 DF_BATCH_SIZE = 2
 SPECTRA_BATCH_SIZE = 3
@@ -109,7 +109,7 @@ C51_FILE_FUSION_ID = "C51_c46_uncompressed_fourier_c29_music_or"
 C51_MUSIC_PARAMETERS = (0.6247621768875313, 0.1758110900096306, 0.32782341355110767, 0.235938364315404, 0.38193243652953396, 0.0)
 
 DEEZER_NPZ_SHA256 = "a73e90ecd65772699ea5856d7b05e2725a284caf449404673819110223a364d8"
-# 주의: 파일명 official_weights와 달리 이 SHA는 자체 미세 조정한 C180 파생 가중치다.
+# Despite the filename official_weights, this SHA identifies the C180 derivative weights I fine-tuned.
 DEEZER_MANIFEST_SHA256 = "483ae36c6c3408bec8006d3283b7c4974b7d951d0284e4266d5ef69d073676bc"
 FOURIER_FEATURE_SOURCE_SHA256 = "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a"
 FOURIER_COEF_SHA256 = "05cc68dd0f99eea5b96180c0c6274aaa6029416936c3e2e002aaca025ab3885a"
@@ -1093,8 +1093,8 @@ def c3_interval_bounds(starts: list[int], window_samples: int, audio_length: int
 def c3_overlap_weighted(
     target_starts, target_ends, source_starts, source_ends, source_probabilities
 ) -> list[float]:
-    # 서로 다른 모델의 창을 '현재 파일 내부' 시간 겹침 길이로 맞춘다.
-    # 겹침이 없더라도 아래 fallback은 같은 파일의 최근접 창만 사용한다.
+    # Align windows from different models by their temporal overlap within the current file.
+    # When there is no overlap, the fallback below uses only the nearest window in the same file.
     if not (
         len(target_starts) == len(target_ends)
         and len(source_starts) == len(source_ends) == len(source_probabilities)
@@ -1169,8 +1169,8 @@ def predict_presence_c3(model, voice_indices, music_indices, audio):
 def predict_voice_fake_c3(
     df_model, df_fake_label_index, spectra_model, audio, device, *, file_tail=None
 ):
-    # 두 출력의 용도를 구분한다: 원 DF는 외부 Voice, C688 tail은 File 내부 Voice.
-    # 창 위치·Spectra는 공유하되 외부 Voice 점수를 학습 tail로 덮어쓰지 않는다.
+    # The outputs serve different roles: original DF feeds external Voice; the C688 tail feeds voice evidence inside File.
+    # Window positions and Spectra are shared; the trained tail does not replace the external Voice score.
     if calculate_rms(audio) < SILENCE_RMS:
         empty = (0.0, [], [], [])
         return (empty, empty) if file_tail is not None else empty
@@ -1210,7 +1210,7 @@ def predict_voice_fake_c3(
     if len(df_logits) != len(spectra_logits) or len(df_logits) != len(starts):
         raise RuntimeError("C3 voice detector segment counts differ")
     denominator = 1.0 + SPECTRA_BONAFIDE_LOGIT_WEIGHT
-    # DF는 spoof-bonafide margin, Spectra는 bonafide 방향이므로 Spectra 항을 뺀다.
+    # DF uses a spoof-minus-bonafide margin; Spectra points toward bonafide, so its term is subtracted.
     fused = [
         (df_value - SPECTRA_BONAFIDE_LOGIT_WEIGHT * spectra_value) / denominator
         for df_value, spectra_value in zip(df_logits, spectra_logits)
@@ -1390,8 +1390,8 @@ def combine_c51_file_fake_score(
     fourier_music_fake,
     c29_music_fake,
 ) -> float:
-    # 고정 logistic이 음성 사건 qV와 음악 사건 qM을 만든 뒤 noisy-OR로 결합한다.
-    # 수치는 calibration의 완전성을 보장하지 않는다. 이름만 보고 단일 탐지기로 읽지 말 것.
+    # Fixed logistic formulas produce voice event qV and music event qM, then combine them with noisy-OR.
+    # These values do not guarantee perfect calibration; the function name does not describe a single detector.
     values = (
         voice_fake,
         music_fake,
@@ -1439,8 +1439,8 @@ def combine_c660_file_fake_score(
     c29_music_fake,
 ) -> float:
     """Reuse both frozen C51 paths; replace only the direct Fourier slot."""
-    # C660의 핵심: direct Fourier 인수 자리에 이미 계산한 외부 Music 앙상블을 전달.
-    # Fourier 자체는 legacy/외부 Music 안에 남아 있다. 두 raw/stem OR의 큰 값을 사용한다.
+    # C660's key change: pass the already computed external Music ensemble into the direct Fourier argument slot.
+    # Fourier remains in the legacy/external Music paths. Use the larger of the raw/stem OR scores.
     stem_file = combine_c51_file_fake_score(
         voice_fake, legacy_music_fake, voice_present, music_present,
         aligned_voice, aligned_music, external_music_fake, c29_music_fake,
@@ -1525,7 +1525,7 @@ def run_inference(
             fourier_coefficient, fourier_intercept, fourier_feature, original_audio
         )
         c29_music_fake = predict_c29_music_fake(c29_head, c29_arrays, original_audio)
-        # C29 계산은 역사적 경로와 검증 보존용. 현재 C51의 direct C29 계수는 0.0이다.
+        # I retain the C29 calculation to preserve the historical path and checks. C51's current direct C29 coefficient is 0.0.
         selected_dasheng = selected_music_model.predict(
             original_audio, presence_starts, presence_ends, music_presence_segments
         )
@@ -1533,7 +1533,7 @@ def run_inference(
         classical_music_fake = blend_classical_music_scores(
             fourier_music_fake, selected_dasheng
         )
-        # 여기의 두 번째 성분은 selected Dasheng이며, C29가 아니다.
+        # The second component here is selected Dasheng, not C29.
         music_fake = blend_triad_music_scores(
             sonics_music_fake, deezer_music_fake, classical_music_fake
         )
@@ -1541,7 +1541,7 @@ def run_inference(
             c212_anchor, sonics_music_fake, deezer_music_fake,
             fourier_music_fake, selected_dasheng
         )
-        # 이 C346 값은 아래 C596의 최종 외부 Music으로 덮어써지는 역사적 중간값이다.
+        # This historical C346 intermediate value is overwritten below by C596's final external Music score.
         aligned_voice = aligned_voice_event_c3(
             voice_starts,
             voice_ends,
@@ -1594,8 +1594,8 @@ def run_inference(
             original_audio, c212_anchor, presence_starts, presence_ends,
             music_presence_segments, deezer_music_fake, fourier_music_fake, selected_dasheng)
         external_music_fake = c596_music["Music"]
-        # 최종 외부 Music = D239/Fourier/Dasheng/EAT의 고정 logit 결합.
-        # 원 C51으로 위에서 계산한 file_fake도 아래에서 다시 계산되므로 최종 출력이 아니다.
+        # Final external Music is a fixed logit combination of D239/Fourier/Dasheng/EAT.
+        # The file_fake calculated above with original C51 is also recomputed below and is not the final output.
         file_aligned_voice = aligned_voice_event_c3(
             file_vs, file_ve, file_vl, presence_starts, presence_ends, voice_presence_segments,
         )
@@ -1616,8 +1616,8 @@ def run_inference(
             aligned_music=aligned_music,
             c29_music_fake=c29_music_fake,
         )
-        # 위 마지막 호출이 실제 FILE_FAKE_PROB: C688 raw/stem 음성과 C660 음악 연결을 사용.
-        # 아래 나머지 네 출력은 원 Voice, C596 Music, PANNs 두 Presence를 유지한다.
+        # The last call above produces the actual FILE_FAKE_PROB using C688 raw/stem voice and C660's music connection.
+        # The other four outputs below retain original Voice, C596 Music, and the two PANNs Presence scores.
         values = {
             "FILE_FAKE_PROB": file_fake,
             "VOICE_FAKE_PROB": voice_fake,
@@ -1647,8 +1647,8 @@ def run_inference(
     return submission_rows
 
 def verify_packaged_model_files() -> None:
-    # 원 제출 manifest의 모든 파일을 요구한다. 이 소스 보관본에 모델 자산은 포함되지 않는다.
-    # 주석으로 달라진 파일 크기/SHA를 맞추려고 원 검증 값을 바꾸거나 우회하지 않는다.
+    # Every file in the original submission manifest is required. This source archive excludes model assets.
+    # I preserve the original checks; added comments do not justify changing or bypassing pinned sizes/SHAs.
     manifest_path = MODEL_DIR / "MODEL_MANIFEST.json"
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Missing model manifest: {manifest_path}")

@@ -1,0 +1,177 @@
+{
+  "date": "2026-09-28",
+  "copied": [
+    {
+      "archive_path": "src/c693_tail.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/c693_tail.py",
+      "bytes": 4792,
+      "sha256": "f178536cc58858d7415ae5f651fa3bf7a79e48ed09c791e14b5cb14965ab1e0c",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c159/c159_music_window.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c159/c159_music_window.py",
+      "bytes": 3902,
+      "sha256": "d21000971f90d2c85a880f88114ec41c11e947004ccb12e039fe395349d9bdb3",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c159/c159_runtime.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c159/c159_runtime.py",
+      "bytes": 3331,
+      "sha256": "4b82dd087aaf2842b4cb58e4e79f79a02cf5b0fe625cad1d214f90d79cdfbd30",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c212/c212_runtime.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c212/c212_runtime.py",
+      "bytes": 2389,
+      "sha256": "49c0f87bc419b1614d9f02c90d7b3bfbc1d2c0318cb07d156fa25de35d301316",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c239/c239_runtime.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c239/c239_runtime.py",
+      "bytes": 1675,
+      "sha256": "5586f7778dc85bfde7730eff152fce0300fc310296d38d6fce0fe8eb34b5254c",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c29_lpc_residual_head_v0_1.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c29_lpc_residual_head_v0_1.py",
+      "bytes": 12823,
+      "sha256": "cbdb8e1f4ed484999e5cc8ea4376d51166ebe1e8a0a048cc27a1248f96b948fa",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c346/c346_runtime.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c346/c346_runtime.py",
+      "bytes": 2359,
+      "sha256": "5091f560de9d61d3238f482829effd04daaeda6480ac25eec99aa993412730b5",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/c596_eat/c596_runtime.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c596_eat/c596_runtime.py",
+      "bytes": 8589,
+      "sha256": "0361a6694ecbf91fad39048b13b4d122513ec35e5ec3e6c3d4f8d574627e5d16",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "bytes": 8438,
+      "sha256": "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/requirements.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/requirements.txt",
+      "bytes": 247,
+      "sha256": "d4fae5fdbc8aff71f6a5fb2ae31f1c17d1a7b212893e2f584fdac7b2c2c29ae5",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "src/script.py",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/script.py",
+      "bytes": 71920,
+      "sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/DF_ARENA_LICENSE.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/df_arena_1b/LICENSE.txt",
+      "bytes": 3264,
+      "sha256": "903d5ad67a67b3a919981892948e984bdf349053d54f1563c6497f48cdaf75b4",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/DF_ARENA_MODIFICATIONS.md",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/df_arena_1b/MODIFICATIONS.md",
+      "bytes": 497,
+      "sha256": "7da903090d2fb6a17a8f9cb21479abd0c9d97851418c970122e2b3c3a178c4aa",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/C693_PROVENANCE.md",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c693/C693_PROVENANCE.md",
+      "bytes": 3416,
+      "sha256": "1bb675f4b98613d5f7ae559f86ee44d8b7ec99f2df663eb8a854379aa1939d68",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/DEEZER_CC_BY_NC_4.0.md",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/deezer_specnn/LICENSE.CC-BY-NC-4.0.md",
+      "bytes": 17848,
+      "sha256": "927ed77250c602dca74b50799a38a80a3b809c024c30ed392c9426ecd3a2ffb0",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/ORIGINAL_ATTRIBUTION.md",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/ATTRIBUTION.md",
+      "bytes": 949,
+      "sha256": "074fa9391c2134170b634f9a7119852e0c61673af69a6d14c5f39743736bbac0",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/SPECTRA_APACHE_2.0.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/spectra_aasist3/LICENSE-APACHE-2.0.txt",
+      "bytes": 11418,
+      "sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/SPECTRA_MODIFICATIONS.md",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/spectra_aasist3/MODIFICATIONS.md",
+      "bytes": 841,
+      "sha256": "51fc062696832a121c04cf451bbfcd70d97a229708249f70e5431a4b56ca576d",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/SONICS_LICENSE.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/sonics/LICENSE.txt",
+      "bytes": 2155,
+      "sha256": "395f07e909e83c1e68c8cd23c18be0bb70e429cd570fdb953b18dd3473e8ced4",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/DASHENG_APACHE_2.0.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c159/LICENSE_DASHENG",
+      "bytes": 11353,
+      "sha256": "249c4ef6ef22f69a8a1076d4eb04eb8560af2d4fc48440749f51477efacbaa8f",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/EAT_MIT_LICENSE.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c596_eat/EAT_MIT_LICENSE",
+      "bytes": 1067,
+      "sha256": "f311fccd1f7ce6393cd743ab1135f62f9487e2d54f787b7d3399b6793df649c5",
+      "byte_identical": true
+    },
+    {
+      "archive_path": "notices/TORCHVISION_BSD_3_CLAUSE.txt",
+      "original_workspace_path": "research/c687_df_native_music_adaptation/c693_package_integration/package_src/model/c596_eat/TORCHVISION_LICENSE.txt",
+      "bytes": 1517,
+      "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d",
+      "byte_identical": true
+    }
+  ],
+  "annotated": [
+    {
+      "original": "src/script.py",
+      "annotated": "annotated/script.py",
+      "original_sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84",
+      "annotated_sha256": "1ff0291ff3585bdfb55217e6f70dbafecdcc228ee9778cb83ae4de18651b5a60",
+      "ast_identical": true,
+      "scope": "comments only; no execution or numerical test"
+    },
+    {
+      "original": "src/c693_tail.py",
+      "annotated": "annotated/c693_tail.py",
+      "original_sha256": "f178536cc58858d7415ae5f651fa3bf7a79e48ed09c791e14b5cb14965ab1e0c",
+      "annotated_sha256": "c047e0edb190b603b3699be4f439714ee333b51e4d84f3b5a51318a8ce501c2b",
+      "ast_identical": true,
+      "scope": "comments only; no execution or numerical test"
+    }
+  ]
+}

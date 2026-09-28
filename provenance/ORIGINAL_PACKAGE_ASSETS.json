@@ -1,0 +1,724 @@
+{
+  "notice": "Historical original-package pins only. Large assets and ZIP were not rehashed during archiving and are not distributed here. Paths are relative to the original package/model, not this repository.",
+  "model_manifest_sha256": "1c99b89005344357a25d7c8da4ccea1f5d36d94363b63ced5c713d8f6d8c98be",
+  "original_zip": {
+    "workspace_relative_path": "artifacts/submit_c693.zip",
+    "bytes": 7288933071,
+    "recorded_sha256": "094f0d6111618db5b00ac67ec80db6f67e54cd7a1ab04ed34077f5e199fc1544",
+    "recorded_status": "PASS_C693_ZIP_CRC_ALL_ENTRY_SHA",
+    "recorded_entries": 147,
+    "included_in_archive": false
+  },
+  "model_manifest_entries": [
+    {
+      "path": "ABLATION_DESIGN.json",
+      "bytes": 2010,
+      "recorded_sha256": "af55181266b12a71297ffb245ed5a3f8a21d0d25ad0b2aa5ee5f0609d40fe1de"
+    },
+    {
+      "path": "ATTRIBUTION.md",
+      "bytes": 949,
+      "recorded_sha256": "074fa9391c2134170b634f9a7119852e0c61673af69a6d14c5f39743736bbac0"
+    },
+    {
+      "path": "C2_FILE_FUSION_RECEIPT.json",
+      "bytes": 3373,
+      "recorded_sha256": "8df003f053fa2475f3e2175e7d0dfc98ae320d5f35e5a4ca7813b758ace1260f"
+    },
+    {
+      "path": "C2_FILE_FUSION_REPORT.md",
+      "bytes": 1316,
+      "recorded_sha256": "10827451379285a602077b173643be3da407f5eb8d580aa95e1b7352a852da5f"
+    },
+    {
+      "path": "C3_FILE_FUSION_RECEIPT.json",
+      "bytes": 2626,
+      "recorded_sha256": "d9f2d91e0bdac585467e98931f112856a645d66b404298771cc7418c62236715"
+    },
+    {
+      "path": "C3_FILE_FUSION_REPORT.md",
+      "bytes": 1344,
+      "recorded_sha256": "fda98e406a979d749bdc5375d6151179235cfc2802128356e63c8cc22b0224a8"
+    },
+    {
+      "path": "C46_C29A25_C3_RECEIPT.json",
+      "bytes": 4476,
+      "recorded_sha256": "e21591156921cbdd3aabcb4216fdd1872fdf89d8474a2b165b68ea4d8c8bbe27"
+    },
+    {
+      "path": "C46_C29A25_C3_REPORT.md",
+      "bytes": 1354,
+      "recorded_sha256": "d0432c4b1f6afb48de63ffca06f8f7e82ddaea2edbe9bea972b0aafac9112fcf"
+    },
+    {
+      "path": "C51_UNCOMPRESSED_FILE_MUSIC_RECEIPT.json",
+      "bytes": 13375,
+      "recorded_sha256": "b43cbebbf68a04a4221565daf46c67859a1a95d37a890370901fd78a47251a96"
+    },
+    {
+      "path": "C51_UNCOMPRESSED_FILE_MUSIC_REPORT.md",
+      "bytes": 732,
+      "recorded_sha256": "3ede7bcc9da3e9646cfe37867e4da3cd22d06ed99cf76d6e989606f061f6e57b"
+    },
+    {
+      "path": "C660_DEPLOYMENT.json",
+      "bytes": 3338,
+      "recorded_sha256": "b16d7353efdbd610812f5e3b394820c826a7aa9eb21de464bc15dc533836aa49"
+    },
+    {
+      "path": "C693_DEPLOYMENT.json",
+      "bytes": 7339,
+      "recorded_sha256": "382f2c5329bd17144f1617b4b115029f1f5f319b270c7b0c2065d6f7f0c4e856"
+    },
+    {
+      "path": "MODEL_INFO.txt",
+      "bytes": 1717,
+      "recorded_sha256": "5ec43b9e12f3cc33d1a6fd556641ae2a86b3a1852ff7d9b27dbc26dcacd987fe"
+    },
+    {
+      "path": "MODEL_PROVENANCE.md",
+      "bytes": 4011,
+      "recorded_sha256": "f396c801a4bb7d65d0b844eed045e7e6325fda3ae538968ff82af6e162eee0af"
+    },
+    {
+      "path": "SHA256SUMS.txt",
+      "bytes": 11903,
+      "recorded_sha256": "6be1b4ae1fa875b383647f3d2de8e62906f6861c1349c78e3ea5510bfdc2dcf5"
+    },
+    {
+      "path": "TRIAD_SELECTION_RECEIPT.json",
+      "bytes": 6294,
+      "recorded_sha256": "ec7420197ac644d8d26f530b5fa6b6556a5304a5c31d6fd8342b46c03040c756"
+    },
+    {
+      "path": "c159/C151_ACTUAL_TRAINING_MANIFEST.json",
+      "bytes": 1777165,
+      "recorded_sha256": "74497225b610c4172d9508c2841c8277359b27db685fcc904eafd6fda5c4e18d"
+    },
+    {
+      "path": "c159/LICENSE_DASHENG",
+      "bytes": 11353,
+      "recorded_sha256": "249c4ef6ef22f69a8a1076d4eb04eb8560af2d4fc48440749f51477efacbaa8f"
+    },
+    {
+      "path": "c159/c159_music_window.py",
+      "bytes": 3902,
+      "recorded_sha256": "d21000971f90d2c85a880f88114ec41c11e947004ccb12e039fe395349d9bdb3"
+    },
+    {
+      "path": "c159/c159_runtime.py",
+      "bytes": 3331,
+      "recorded_sha256": "4b82dd087aaf2842b4cb58e4e79f79a02cf5b0fe625cad1d214f90d79cdfbd30"
+    },
+    {
+      "path": "c159/dasheng/README.md",
+      "bytes": 2739,
+      "recorded_sha256": "03f667e8e1d7745c71ec288ea80426235dfd0b4cfaa2de1be0f2b587a2243e28"
+    },
+    {
+      "path": "c159/dasheng/config.json",
+      "bytes": 518,
+      "recorded_sha256": "b9ff40da4167dd776cb2fe084c9a80c0fdd6568c3b995e0255b46a9d435e7b80"
+    },
+    {
+      "path": "c159/dasheng/configuration_dasheng.py",
+      "bytes": 2798,
+      "recorded_sha256": "7a524b9d37c0e0392b75bbfb0fe5e2d1f60f62a8f2c46917bb186b638580966b"
+    },
+    {
+      "path": "c159/dasheng/feature_extraction_dasheng.py",
+      "bytes": 6717,
+      "recorded_sha256": "78139c9219ff9bc48f9c5f86fb3fba9e727cb765679a92db69066d5caeb9875c"
+    },
+    {
+      "path": "c159/dasheng/model.safetensors",
+      "bytes": 341807392,
+      "recorded_sha256": "adaa439ebec13933501242364a29b7912c2695d0354061b278c873438b2736c3"
+    },
+    {
+      "path": "c159/dasheng/modeling_dasheng.py",
+      "bytes": 19558,
+      "recorded_sha256": "6d2a548ed05ee216ed5f70dcf2f4586c5d2c0c1a730011db8e9347eab36143d9"
+    },
+    {
+      "path": "c159/dasheng/preprocessor_config.json",
+      "bytes": 445,
+      "recorded_sha256": "16b23e7bd7eb867d288aa4cea8a9a9531f5ebb60534b14154feaaad10dc34f6c"
+    },
+    {
+      "path": "c159/music_head.npz",
+      "bytes": 18361,
+      "recorded_sha256": "410bc2cba04580084c2a3ed6e78bbe81d0ef8e9a8ce80b75dbf6df9abfc1b2a3"
+    },
+    {
+      "path": "c190/C180_ACTUAL_TRAINING_MANIFEST.json",
+      "bytes": 24671014,
+      "recorded_sha256": "88c264fb59d964bba27c406a97fb14a8a856455335effb45edb8a50a61b9bb75"
+    },
+    {
+      "path": "c190/C190_DEPLOYMENT_TRAINING_RECEIPT.json",
+      "bytes": 1248,
+      "recorded_sha256": "1ec7b3ef58fe4bdf38965cedcbc2b976887916af8e58ad45a9d03e3156333254"
+    },
+    {
+      "path": "c190/ORIGINAL_DEEZER_MANIFEST.json",
+      "bytes": 21288,
+      "recorded_sha256": "7b6e4f770f218a9747be0b6a9a6839e00cd639279b6a962139519fd3ea00ddc5"
+    },
+    {
+      "path": "c190/PROVENANCE.json",
+      "bytes": 3885,
+      "recorded_sha256": "baac04107c0ead2c395224dbae4f1a2e7712b7ef4593025286ab84b48641f70e"
+    },
+    {
+      "path": "c190/source_licenses/kokoro/kokoro_LICENSE.txt",
+      "bytes": 11357,
+      "recorded_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "path": "c190/source_licenses/musicgen/AIME_CC_BY_4_legalcode.txt",
+      "bytes": 18656,
+      "recorded_sha256": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94"
+    },
+    {
+      "path": "c190/source_licenses/musicgen/AIME_README.md",
+      "bytes": 2217,
+      "recorded_sha256": "5c5ce0dcda4f6b45e6645b6c5c4d0f06443a3f53312155a9f5382399cbbb6a4d"
+    },
+    {
+      "path": "c190/source_licenses/musicgen/MusicGen_LICENSE_weights.txt",
+      "bytes": 19333,
+      "recorded_sha256": "336255dc30193e8e15d689d9481bb05673d89055718f3a96923a7ffb99adbbaf"
+    },
+    {
+      "path": "c190/source_licenses/musicgen/MusicGen_README.md",
+      "bytes": 12310,
+      "recorded_sha256": "a655568e130f57a4a5af3412ba4d29d755e44f896d39b2a710b185767d7caa17"
+    },
+    {
+      "path": "c190/source_licenses/musicgen/SOURCE_INDEX.json",
+      "bytes": 2414,
+      "recorded_sha256": "dbae3f10b6ca5259d2f096f2b4479e081250845f02de1e5b03e248d4afed717f"
+    },
+    {
+      "path": "c212/C205_COMPAT40.manifest.json",
+      "bytes": 22697,
+      "recorded_sha256": "5ba5a655c4159d6a8377bc8471438d40b73ece367638b4135c5daf0e333f7740"
+    },
+    {
+      "path": "c212/C205_COMPAT40.npz",
+      "bytes": 6579362,
+      "recorded_sha256": "83e79174ba3d005c6e651722018a1fb7ace5d9aaf4c06de77a1ce2b30dfb5711"
+    },
+    {
+      "path": "c212/C205_TRAINING_PRESERVATION.json",
+      "bytes": 13018160,
+      "recorded_sha256": "8aed6f0d1c4bcbb6aea00a77790ce98938ccbfb1489dc6c8afd61d029c2c9e32"
+    },
+    {
+      "path": "c212/C205_TRAIN_RESULT.json",
+      "bytes": 3505,
+      "recorded_sha256": "f46bdfe1421643e7b20138d32f60114feb78fa71a5e7af270ef4f63564136e0e"
+    },
+    {
+      "path": "c212/PROVENANCE.json",
+      "bytes": 2557,
+      "recorded_sha256": "c22ed0fe6169517e938e6e75a8c0c8728d5c19e41be141b1c5e69565cc043a5c"
+    },
+    {
+      "path": "c212/c212_runtime.py",
+      "bytes": 2389,
+      "recorded_sha256": "49c0f87bc419b1614d9f02c90d7b3bfbc1d2c0318cb07d156fa25de35d301316"
+    },
+    {
+      "path": "c239/PROVENANCE.json",
+      "bytes": 1487,
+      "recorded_sha256": "2a29a35823bc33867ec5128f1e1e4f74e261ef829d06b59e3ea2fde95fe1e275"
+    },
+    {
+      "path": "c239/c239_runtime.py",
+      "bytes": 1675,
+      "recorded_sha256": "5586f7778dc85bfde7730eff152fce0300fc310296d38d6fce0fe8eb34b5254c"
+    },
+    {
+      "path": "c29_lpc_residual_head_v0_1.py",
+      "bytes": 12823,
+      "recorded_sha256": "cbdb8e1f4ed484999e5cc8ea4376d51166ebe1e8a0a048cc27a1248f96b948fa"
+    },
+    {
+      "path": "c29_lpc_residual_music/C29_ALPHA_GRID_RESULT.v0_1.json",
+      "bytes": 18074,
+      "recorded_sha256": "3a29c5d2209dbc0ab0b9aa72baea55f457ff2030775597bac2521d660ad58385"
+    },
+    {
+      "path": "c29_lpc_residual_music/C29_FIXED_FOURIER_FUSION_RESULT.v0_1.json",
+      "bytes": 5732,
+      "recorded_sha256": "1be9a4183522b8cf4d0fb1713522c4e38b49fce164288da03b2fc677decc98cb"
+    },
+    {
+      "path": "c29_lpc_residual_music/C29_FULL_PUBLIC_TRAINING_RECEIPT.v0_1.json",
+      "bytes": 1280,
+      "recorded_sha256": "4b024008e1775eae42d36455d1df7490d85392a2c1defcf8ba86332add558ad8"
+    },
+    {
+      "path": "c29_lpc_residual_music/c29_lpc_residual_model.v0_1.npz",
+      "bytes": 27659,
+      "recorded_sha256": "179ab7962b5efdf63ee43abcb2815e093bd146ede131f93e775479512ac961d3"
+    },
+    {
+      "path": "c346/C346_ACTUAL_CALIBRATION_TRAINING_MANIFEST.json",
+      "bytes": 735846,
+      "recorded_sha256": "eeb70af06f02e4e87883e9d8d428eadbe44679ffa1476cdf3b25a9910fa8be0f"
+    },
+    {
+      "path": "c346/C346_SINGLE_WEIGHT.json",
+      "bytes": 13339,
+      "recorded_sha256": "6d9a190cd377def65166fa3595196183b3d0a0a5557f1d4dbea75f4d8936ff27"
+    },
+    {
+      "path": "c346/PROVENANCE.json",
+      "bytes": 1836,
+      "recorded_sha256": "cce87cccbb51eb99c6ba5fcba40d627f3e95fbe004b5448e668f842d0b253da7"
+    },
+    {
+      "path": "c346/ROOT_SINGLE_WEIGHT_TRANSFER_DECISION_2026-09-09.md",
+      "bytes": 2644,
+      "recorded_sha256": "417e6e8ad95e79c8b48ad4b0166038886783d90651544cd6bcd0475ab493cc3f"
+    },
+    {
+      "path": "c346/c346_runtime.py",
+      "bytes": 2359,
+      "recorded_sha256": "5091f560de9d61d3238f482829effd04daaeda6480ac25eec99aa993412730b5"
+    },
+    {
+      "path": "c51_file_music/C51_DEPLOYMENT_MUSIC_HEAD.v0_1.json",
+      "bytes": 11314,
+      "recorded_sha256": "d28e2344824b5408345605ee46b31287188a1bbafbd0c5dceaeaecadc64697b8"
+    },
+    {
+      "path": "c51_file_music/C51_UNCOMPRESSED_FOURIER_C29_FILE_MUSIC_FREEZE_2026-09-05.md",
+      "bytes": 2790,
+      "recorded_sha256": "af638159c174f01124b951e474f8fc73251ac3f684276d0c96aae67664884bf4"
+    },
+    {
+      "path": "c596_eat/C593_FINAL_MODEL.pt",
+      "bytes": 1832109,
+      "recorded_sha256": "3b788240581c7fe6e53859f6009c63f92139a62db670e8f85466a930ccf375fa"
+    },
+    {
+      "path": "c596_eat/DEPENDENCY_RECEIPT.json",
+      "bytes": 1787,
+      "recorded_sha256": "bf9fa23a7f895f11a591081675917f8e4718be36396ca8ced6d2cfeed118ae4d"
+    },
+    {
+      "path": "c596_eat/DEPLOYMENT.json",
+      "bytes": 1869,
+      "recorded_sha256": "49f2e7137a7db260c9478f586a3de256d0233903be7dc6c87930457c3e07fe6e"
+    },
+    {
+      "path": "c596_eat/EAT_MIT_LICENSE",
+      "bytes": 1067,
+      "recorded_sha256": "f311fccd1f7ce6393cd743ab1135f62f9487e2d54f787b7d3399b6793df649c5"
+    },
+    {
+      "path": "c596_eat/EAT_README.md",
+      "bytes": 2868,
+      "recorded_sha256": "e86d6464443e281eeaa8df774ea7b11d40eb7dc13e5329c9e7e3b02cbe4a5ac3"
+    },
+    {
+      "path": "c596_eat/SELECTION_AND_SCOPE.json",
+      "bytes": 9929,
+      "recorded_sha256": "153b0d312427f5b6b5b3416bb71b09f8cdb8d4f23a162c0f30886f7e67b7f291"
+    },
+    {
+      "path": "c596_eat/SERVER_CONSTRAINTS.txt",
+      "bytes": 229,
+      "recorded_sha256": "b1b09f4af7311a8e9b71ea8d55c76862aa0f7306e6460e060d6a3a6596e5dc5c"
+    },
+    {
+      "path": "c596_eat/TORCHVISION_LICENSE.txt",
+      "bytes": 1517,
+      "recorded_sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d"
+    },
+    {
+      "path": "c596_eat/c596_runtime.py",
+      "bytes": 8589,
+      "recorded_sha256": "0361a6694ecbf91fad39048b13b4d122513ec35e5ec3e6c3d4f8d574627e5d16"
+    },
+    {
+      "path": "c596_eat/config.json",
+      "bytes": 779,
+      "recorded_sha256": "2e7d67b4c77586cd495c9691152e49280c6be720a0e04da2c66822b1e94503ff"
+    },
+    {
+      "path": "c596_eat/configuration_eat.py",
+      "bytes": 1768,
+      "recorded_sha256": "761f19555f0d53aa7725ffb83a6e4eec652af97244134ea5147edca71be9b9e5"
+    },
+    {
+      "path": "c596_eat/eat_model.py",
+      "bytes": 3670,
+      "recorded_sha256": "9a836c65a7e02e7b3df80cca93324ff96d50b3c380a777c393803671e17faf37"
+    },
+    {
+      "path": "c596_eat/model.safetensors",
+      "bytes": 359905840,
+      "recorded_sha256": "8623072d09aac4f3ad1168b4fed3a24e4f68fe1da25b9fe733375efb237e5f48"
+    },
+    {
+      "path": "c596_eat/model_core.py",
+      "bytes": 6928,
+      "recorded_sha256": "f0157ab1d7f59e07db6da9d7845099dac7b818e1ea69322936da83364d8a2768"
+    },
+    {
+      "path": "c596_eat/modeling_eat.py",
+      "bytes": 467,
+      "recorded_sha256": "41eaf4b87923a56ef13899cbbe6d6ec9642d1f58db2e0b2661aae611eccfce9f"
+    },
+    {
+      "path": "c596_eat/provenance/C564_ACQUIRED_ASSETS.md",
+      "bytes": 1706,
+      "recorded_sha256": "cd701f8eb4fd894c0cc2711c8341a65cad77aa7b53f34e4355d0657e02495b35"
+    },
+    {
+      "path": "c596_eat/provenance/C577_DEPENDENCY_STATIC_REVIEW.md",
+      "bytes": 1966,
+      "recorded_sha256": "caae1d0dc606925f9d7fdb5ecdeb606253aeb0b8802eaf1faad7ece251ca7d58"
+    },
+    {
+      "path": "c596_eat/provenance/C577_ROOT_PACKAGE_SCOPE.md",
+      "bytes": 4820,
+      "recorded_sha256": "7370e58365ab177fbd00ef25303ea2faba2dcb5b14970d23661dfaabb947df40"
+    },
+    {
+      "path": "c596_eat/provenance/C577_ROOT_PUBLIC_DECISION.md",
+      "bytes": 4832,
+      "recorded_sha256": "c7b0208dcdae1df307314a55a3d392615ac0b68e9a9924e1de947d76cfa8c8dc"
+    },
+    {
+      "path": "c596_eat/provenance/C593_FREEZE.md",
+      "bytes": 3324,
+      "recorded_sha256": "94ff26da0ae5f11f0f26697a3bf978fac1eb8fe129781ad8053ee3cb7eb4a678"
+    },
+    {
+      "path": "c596_eat/provenance/C594_FIT_TRANSFER_FREEZE.md",
+      "bytes": 2332,
+      "recorded_sha256": "1c42f298650bf0e5ccc0564b53b47e4546603e778d7c5b1b66c1e4d34687e8db"
+    },
+    {
+      "path": "c596_eat/provenance/PORTABLE_CODE_HANDOFF.md",
+      "bytes": 4084,
+      "recorded_sha256": "571970811cad47d2b9fc22c0cf797d06a8f4132b96a308c8718be938d418cf84"
+    },
+    {
+      "path": "c596_eat/provenance/ROOT_PACKAGE_SCOPE.md",
+      "bytes": 3690,
+      "recorded_sha256": "39023d6ca8adce961abf5a4c2af73992e3088368f76e26aee51e679c84e33f78"
+    },
+    {
+      "path": "c596_eat/provenance/ROOT_PUBLIC_DECISION.md",
+      "bytes": 4109,
+      "recorded_sha256": "bec5fc7ad2d764d12745b097d347c4c9ec3b5c49584353656ca92949ee4acbce"
+    },
+    {
+      "path": "c596_eat/provenance/ROOT_SCOPE.md",
+      "bytes": 4080,
+      "recorded_sha256": "8eaf086bc79e7cdf5240f914105b92713fdd4297a15e8e8de48faffa03b218ee"
+    },
+    {
+      "path": "c596_eat/wheels/timm-0.9.12-py3-none-any.whl",
+      "bytes": 2232355,
+      "recorded_sha256": "2a828afac5b710a80ec66d0f85807e171e342faf5c0703b33102d8aa206f19dc"
+    },
+    {
+      "path": "c596_eat/wheels/torchvision-0.22.1+cu128-cp311-cp311-manylinux_2_28_x86_64.whl",
+      "bytes": 8732234,
+      "recorded_sha256": "92568ac46b13a8c88b61589800b1b9c4629be091ea7ce080fc6fc622e11e0915"
+    },
+    {
+      "path": "c693/C688_TRAINED_TAIL.pt",
+      "bytes": 172585774,
+      "recorded_sha256": "0281f889b4506af2f7d0d4280ba5f2b458e538a57dfcea1a020e112d1e968afc"
+    },
+    {
+      "path": "c693/C693_PROVENANCE.md",
+      "bytes": 3416,
+      "recorded_sha256": "1bb675f4b98613d5f7ae559f86ee44d8b7ec99f2df663eb8a854379aa1939d68"
+    },
+    {
+      "path": "c693/source_licenses/ASV_LICENSE_text.txt",
+      "bytes": 19941,
+      "recorded_sha256": "99a4d3e0db6f9a5cd8871f9737b207af01de333f57c6269a11ce755227c1555d"
+    },
+    {
+      "path": "c693/source_licenses/ASV_README.txt",
+      "bytes": 13139,
+      "recorded_sha256": "aa72c9527424585688697d18d51dfcab1828040e48d2aed5d12f190333935207"
+    },
+    {
+      "path": "c693/source_licenses/MLAAD_LICENSE",
+      "bytes": 929,
+      "recorded_sha256": "c269fce180b8ed351aa7a6a470344bad837bb6f665013b1030a1069c341e16c0"
+    },
+    {
+      "path": "c693/source_licenses/MLAAD_NOTICE_NO_COMMERCIAL_USE.txt",
+      "bytes": 309,
+      "recorded_sha256": "ec05643dece96dc860b6ab01147192e7fdba2886c1de0c794144b216d9f6a362"
+    },
+    {
+      "path": "c693/source_licenses/MLAAD_README.md",
+      "bytes": 1456,
+      "recorded_sha256": "b44f3b88c5df7a50829ecec18d7e99d02d2d8206f7df687522dd69ba5724038b"
+    },
+    {
+      "path": "c693/source_licenses/MLAAD_original__LICENSE",
+      "bytes": 1535,
+      "recorded_sha256": "192aa5cd757a8a3249e0b97459820ac4d33b1938807fe34f388527aa4fb1d613"
+    },
+    {
+      "path": "c693/source_licenses/fma-western-art_ANNOTATIONS",
+      "bytes": 5775,
+      "recorded_sha256": "ad0cb3607c81022981ee449892abeda49a5ee535e5e1f1e07f414413dda23e3a"
+    },
+    {
+      "path": "c693/source_licenses/fma_ANNOTATIONS",
+      "bytes": 4860,
+      "recorded_sha256": "c3be9f55b40d21bd5b238c3f97a232c650132f798bf2452da82a055e175b7eac"
+    },
+    {
+      "path": "c693/source_licenses/hd-classical_ANNOTATIONS",
+      "bytes": 4332,
+      "recorded_sha256": "2a73fc2eee8fbf22db919153201211cc386c0d05d1f37e6128ad6c47cf51281d"
+    },
+    {
+      "path": "c693/source_licenses/jamendo_ANNOTATIONS",
+      "bytes": 8646,
+      "recorded_sha256": "f83a94906abe89968aeadd653237c15ee81965ee7e1d95605885f3516e0795e2"
+    },
+    {
+      "path": "deezer_specnn/DEEZER_CC_BY_NC_COMPETITION_ELIGIBILITY.v1.json",
+      "bytes": 2608,
+      "recorded_sha256": "9e3e7521ebfbf310d203451aa4dfa117e8ec1fef877b6698f988842c2e9183b1"
+    },
+    {
+      "path": "deezer_specnn/LICENSE.CC-BY-NC-4.0.md",
+      "bytes": 17848,
+      "recorded_sha256": "927ed77250c602dca74b50799a38a80a3b809c024c30ed392c9426ecd3a2ffb0"
+    },
+    {
+      "path": "deezer_specnn/OFFICIAL_EXPORT_PROVENANCE.v1.json",
+      "bytes": 3048,
+      "recorded_sha256": "d05f3f250b61b17eb6d31aa04dc87df7135dae670907058676620ea6b5abf503"
+    },
+    {
+      "path": "deezer_specnn/deezer_specnn_official_weights.v1.manifest.json",
+      "bytes": 22358,
+      "recorded_sha256": "483ae36c6c3408bec8006d3283b7c4974b7d951d0284e4266d5ef69d073676bc"
+    },
+    {
+      "path": "deezer_specnn/deezer_specnn_official_weights.v1.npz",
+      "bytes": 6579362,
+      "recorded_sha256": "a73e90ecd65772699ea5856d7b05e2725a284caf449404673819110223a364d8"
+    },
+    {
+      "path": "deezer_specnn/model_provenance.v1.json",
+      "bytes": 6196,
+      "recorded_sha256": "d985ec0499001eb7aff4d5bc63edb826f6777d4dad1986e34372f215f133829c"
+    },
+    {
+      "path": "df_arena_1b/.gitattributes",
+      "bytes": 1519,
+      "recorded_sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361"
+    },
+    {
+      "path": "df_arena_1b/.gitignore",
+      "bytes": 0,
+      "recorded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "df_arena_1b/LICENSE.txt",
+      "bytes": 3264,
+      "recorded_sha256": "903d5ad67a67b3a919981892948e984bdf349053d54f1563c6497f48cdaf75b4"
+    },
+    {
+      "path": "df_arena_1b/MODIFICATIONS.md",
+      "bytes": 497,
+      "recorded_sha256": "7da903090d2fb6a17a8f9cb21479abd0c9d97851418c970122e2b3c3a178c4aa"
+    },
+    {
+      "path": "df_arena_1b/README.md",
+      "bytes": 3043,
+      "recorded_sha256": "0f577f45eea69a99eb55404569c6efa814dfb15b22791bf33bc652c0e134d75a"
+    },
+    {
+      "path": "df_arena_1b/__init__.py",
+      "bytes": 0,
+      "recorded_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "df_arena_1b/backbone.py",
+      "bytes": 2332,
+      "recorded_sha256": "fd3361c8ec42a8da92976d19521b68216b5732253b24c42a7304e93d407b209f"
+    },
+    {
+      "path": "df_arena_1b/config.json",
+      "bytes": 600,
+      "recorded_sha256": "e9f6b651fb2f83d320b5e10b38bc104afdc57641839d16dd1b4921e9eae49a43"
+    },
+    {
+      "path": "df_arena_1b/configuration_antispoofing.py",
+      "bytes": 325,
+      "recorded_sha256": "dd4a40789c2383896ce743effdd48cb6cdbd2f01c4bcdd7d4b71d7fb92869cf7"
+    },
+    {
+      "path": "df_arena_1b/conformer.py",
+      "bytes": 8741,
+      "recorded_sha256": "84651dc9e81aaf4a32b400a621aa37e8f22e656a8207c5f4120cbb6e682c5540"
+    },
+    {
+      "path": "df_arena_1b/facebook/wav2vec2-xls-r-1b/config.json",
+      "bytes": 1570,
+      "recorded_sha256": "36668778db09d5c64090b62d6afb66ba63057304fe456a45388066ff7dabb997"
+    },
+    {
+      "path": "df_arena_1b/feature_extraction_antispoofing.py",
+      "bytes": 1046,
+      "recorded_sha256": "f549bce974e527a5bf57fd5544ba793d35d99c5db8047600d1c905308a8aacf7"
+    },
+    {
+      "path": "df_arena_1b/modeling_antispoofing.py",
+      "bytes": 822,
+      "recorded_sha256": "a7925c0ba67ef090552e0c337be6e6b3efffd53c3193e2310b30675af968c624"
+    },
+    {
+      "path": "df_arena_1b/pipeline_antispoofing.py",
+      "bytes": 1502,
+      "recorded_sha256": "a308720d1be9fa6c948bd91648a1ec83a1465a178ae0da29f3cc48fe425170b4"
+    },
+    {
+      "path": "df_arena_1b/preprocessor_config.json",
+      "bytes": 147,
+      "recorded_sha256": "e23aafe2a4a2a7c0caaefdc6e4b1e131774137fdeaa50fb5376764b05dacb3c7"
+    },
+    {
+      "path": "df_arena_1b/pytorch_model.bin",
+      "bytes": 4591794734,
+      "recorded_sha256": "780bc14fd4c15e65d58efdef728427cf03cd29cd60be528e97badf8c89087988"
+    },
+    {
+      "path": "fourier_fingerprint/FOURIER_AUDIO_MATERIALIZERS_V3_POST_MATERIALIZATION_REVIEW.v3.json",
+      "bytes": 2427,
+      "recorded_sha256": "591ef689fc4192d86b733ff3c01e231c201df90aeae21849b6c32d8a5beca31f"
+    },
+    {
+      "path": "fourier_fingerprint/FOURIER_LOGISTIC_MODEL.v1.json",
+      "bytes": 3246,
+      "recorded_sha256": "5c29dd1925110f51807b14c0a37bd2db75d5113f58467ae28ff0861da79d748d"
+    },
+    {
+      "path": "fourier_fingerprint/FOURIER_TRAINED_LOGISTIC_V1_POST_QA.v1.json",
+      "bytes": 1209,
+      "recorded_sha256": "93ea2eb9c315b8518a8c451c5a4a2916447a5705361d3968893349a66264f2c0"
+    },
+    {
+      "path": "fourier_fingerprint/coef.float32.npy",
+      "bytes": 28796,
+      "recorded_sha256": "05cc68dd0f99eea5b96180c0c6274aaa6029416936c3e2e002aaca025ab3885a"
+    },
+    {
+      "path": "fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "bytes": 8438,
+      "recorded_sha256": "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a"
+    },
+    {
+      "path": "fourier_fingerprint/intercept.float32.npy",
+      "bytes": 132,
+      "recorded_sha256": "40f157a09b927a172d7b05f3684478814b5f494e12c7eda6d63e9f5b4cfc26c0"
+    },
+    {
+      "path": "htdemucs/955717e8-8726e21a.th",
+      "bytes": 84141911,
+      "recorded_sha256": "8726e21a993978c7ba086d3872e7608d7d5bfca646ca4aca459ffda844faa8b4"
+    },
+    {
+      "path": "htdemucs/htdemucs.yaml",
+      "bytes": 21,
+      "recorded_sha256": "239c445d0b14454d541ad8bd9bb271c9e536d267e8a4625208744cbb2e7bb66c"
+    },
+    {
+      "path": "panns/Cnn14_mAP=0.431.pth",
+      "bytes": 327428481,
+      "recorded_sha256": "0dc499e40e9761ef5ea061ffc77697697f277f6a960894903df3ada000e34b31"
+    },
+    {
+      "path": "panns/class_labels_indices.csv",
+      "bytes": 14675,
+      "recorded_sha256": "cdd1049833c4b86127c2773ac0d14a2754b6a6d0d1798002ed5c66e699708429"
+    },
+    {
+      "path": "panns/component_labels.json",
+      "bytes": 2664,
+      "recorded_sha256": "95bdfd3ca12f7ba31a7cb15d4bbe0147d02074a180f92c0177ffa1f0b80f4f33"
+    },
+    {
+      "path": "sonics/LICENSE.txt",
+      "bytes": 2155,
+      "recorded_sha256": "395f07e909e83c1e68c8cd23c18be0bb70e429cd570fdb953b18dd3473e8ced4"
+    },
+    {
+      "path": "sonics/__init__.py",
+      "bytes": 189,
+      "recorded_sha256": "7fdc452ce71317b548efa79149725c7c204fa9a07e08abe32ea6a992301c0de6"
+    },
+    {
+      "path": "sonics/config.json",
+      "bytes": 1918,
+      "recorded_sha256": "92d133b34b6de96988fb6f516883b7f08adb0456a4d0676598fb1b996d25e828"
+    },
+    {
+      "path": "sonics/detector.py",
+      "bytes": 10328,
+      "recorded_sha256": "56359c868018c209fc1339cc5d26f21184a221b80919aa9a673b117ae7cf9580"
+    },
+    {
+      "path": "sonics/pytorch_model.bin",
+      "bytes": 67908682,
+      "recorded_sha256": "bc816c92de53936a0de519e88f54337ef3a6df13731b17d69c84a85f95f4db2e"
+    },
+    {
+      "path": "spectra_aasist3/LICENSE-APACHE-2.0.txt",
+      "bytes": 11418,
+      "recorded_sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049"
+    },
+    {
+      "path": "spectra_aasist3/MODIFICATIONS.md",
+      "bytes": 841,
+      "recorded_sha256": "51fc062696832a121c04cf451bbfcd70d97a229708249f70e5431a4b56ca576d"
+    },
+    {
+      "path": "spectra_aasist3/UPSTREAM_MODEL_CARD.md",
+      "bytes": 9887,
+      "recorded_sha256": "160d8cf926c19dff4faad87d9f170f77455ed1d2dfa4656d07ced220e29231c7"
+    },
+    {
+      "path": "spectra_aasist3/__init__.py",
+      "bytes": 114,
+      "recorded_sha256": "f5c485a6af9fe3f82e36683091a501935ba06fe8f96a073e9b637bc1183b0190"
+    },
+    {
+      "path": "spectra_aasist3/model.py",
+      "bytes": 33085,
+      "recorded_sha256": "3cf9f200587c71983ce6816380e0fd80c96e81448fe41aea5397270233e04c9c"
+    },
+    {
+      "path": "spectra_aasist3/model.safetensors",
+      "bytes": 1276330956,
+      "recorded_sha256": "327762caab3106ecee5f26b821ccdc6ab1fe34906a3e7042f416c87927df2088"
+    },
+    {
+      "path": "spectra_aasist3/wav2vec2_config.json",
+      "bytes": 1568,
+      "recorded_sha256": "0bffa0d0e98153e883b828d86491f3c6062cb563dc9d7a9cfd1790da30c286ac"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": "PASS_STATIC_ARCHIVE",
+  "scope": "Integrity, syntax/AST and content-hygiene checks only. No model imports, training, inference, metric recomputation, uploads or large original asset rehashes.",
+  "manifest_files": 36,
+  "original_byte_copies": 22,
+  "annotated_ast_pairs": 2,
+  "python_files_parsed": 13,
+  "local_document_links_checked": 30,
+  "registered_C_ids": 656,
+  "directory_count": 704,
+  "secret_scan_limit": "Pattern scan plus human review, not a proof that every possible secret is absent.",
+  "errors": []
+}

@@ -1,0 +1,4 @@
+--no-index
+-c model/c596_eat/SERVER_CONSTRAINTS.txt
+./model/c596_eat/wheels/timm-0.9.12-py3-none-any.whl
+./model/c596_eat/wheels/torchvision-0.22.1+cu128-cp311-cp311-manylinux_2_28_x86_64.whl ; python_version == "3.11" and sys_platform == "linux"

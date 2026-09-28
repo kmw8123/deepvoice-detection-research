@@ -1,0 +1,185 @@
+{
+  "scope": "All archive files except this manifest and generated verification report; excludes .git internals.",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 89,
+      "sha256": "0cc7cbe3d957377d640a644fe7482a80f58dd40ea00d84119aa09a08b122f468"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 318,
+      "sha256": "b94ea0605166d0be088c1ad50666a63ed14dc4557a16d54cdbb01f23426bd1a1"
+    },
+    {
+      "path": "annotated/c693_tail.py",
+      "bytes": 5744,
+      "sha256": "c047e0edb190b603b3699be4f439714ee333b51e4d84f3b5a51318a8ce501c2b"
+    },
+    {
+      "path": "annotated/script.py",
+      "bytes": 74479,
+      "sha256": "1ff0291ff3585bdfb55217e6f70dbafecdcc228ee9778cb83ae4de18651b5a60"
+    },
+    {
+      "path": "experiment_inventory.json",
+      "bytes": 685476,
+      "sha256": "29b6abb04401ab95bebdd796a0c076a82f1d6b6848c60d6ccd98652e88411ffb"
+    },
+    {
+      "path": "EXPERIMENTS.md",
+      "bytes": 176266,
+      "sha256": "22bf4cefc80816158a1438f401bb8f63db3805e8f15b01a439dfd4e00fd60562"
+    },
+    {
+      "path": "LICENSE_POLICY.md",
+      "bytes": 3209,
+      "sha256": "4f8f1e0dc4c382f3f146376d39f66728d1cfcb7f0c77b392a31c1182ad29e01d"
+    },
+    {
+      "path": "MODEL_CARD.md",
+      "bytes": 8579,
+      "sha256": "1dc945629152c9fbfe84437c700ad24b8fff422fcdff34645942eb637e9a3ab7"
+    },
+    {
+      "path": "notices/C693_PROVENANCE.md",
+      "bytes": 3416,
+      "sha256": "1bb675f4b98613d5f7ae559f86ee44d8b7ec99f2df663eb8a854379aa1939d68"
+    },
+    {
+      "path": "notices/DASHENG_APACHE_2.0.txt",
+      "bytes": 11353,
+      "sha256": "249c4ef6ef22f69a8a1076d4eb04eb8560af2d4fc48440749f51477efacbaa8f"
+    },
+    {
+      "path": "notices/DEEZER_CC_BY_NC_4.0.md",
+      "bytes": 17848,
+      "sha256": "927ed77250c602dca74b50799a38a80a3b809c024c30ed392c9426ecd3a2ffb0"
+    },
+    {
+      "path": "notices/DF_ARENA_LICENSE.txt",
+      "bytes": 3264,
+      "sha256": "903d5ad67a67b3a919981892948e984bdf349053d54f1563c6497f48cdaf75b4"
+    },
+    {
+      "path": "notices/DF_ARENA_MODIFICATIONS.md",
+      "bytes": 497,
+      "sha256": "7da903090d2fb6a17a8f9cb21479abd0c9d97851418c970122e2b3c3a178c4aa"
+    },
+    {
+      "path": "notices/EAT_MIT_LICENSE.txt",
+      "bytes": 1067,
+      "sha256": "f311fccd1f7ce6393cd743ab1135f62f9487e2d54f787b7d3399b6793df649c5"
+    },
+    {
+      "path": "notices/ORIGINAL_ATTRIBUTION.md",
+      "bytes": 949,
+      "sha256": "074fa9391c2134170b634f9a7119852e0c61673af69a6d14c5f39743736bbac0"
+    },
+    {
+      "path": "notices/SONICS_LICENSE.txt",
+      "bytes": 2155,
+      "sha256": "395f07e909e83c1e68c8cd23c18be0bb70e429cd570fdb953b18dd3473e8ced4"
+    },
+    {
+      "path": "notices/SPECTRA_APACHE_2.0.txt",
+      "bytes": 11418,
+      "sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049"
+    },
+    {
+      "path": "notices/SPECTRA_MODIFICATIONS.md",
+      "bytes": 841,
+      "sha256": "51fc062696832a121c04cf451bbfcd70d97a229708249f70e5431a4b56ca576d"
+    },
+    {
+      "path": "notices/TORCHVISION_BSD_3_CLAUSE.txt",
+      "bytes": 1517,
+      "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d"
+    },
+    {
+      "path": "provenance/ORIGINAL_PACKAGE_ASSETS.json",
+      "bytes": 26800,
+      "sha256": "019fd73f1e9ae1dd4135bbd7a97fa8a77152e2cc25b8a1f8703c088e72fb8d52"
+    },
+    {
+      "path": "provenance/source_manifest.json",
+      "bytes": 8646,
+      "sha256": "96efff959d95a4bff3b4b20c192345d975c9d64657f95e4580d5cf49dd58c726"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4514,
+      "sha256": "1ab77c1079e139375892a1088e8ba88cf6b18e8d007482d803604fc96404d564"
+    },
+    {
+      "path": "REPRODUCIBILITY.md",
+      "bytes": 8599,
+      "sha256": "f0621ad6cd52c36f5b8480f627dd6ac4fb0c1ee50331137197fc3c803bfce5ba"
+    },
+    {
+      "path": "src/c693_tail.py",
+      "bytes": 4792,
+      "sha256": "f178536cc58858d7415ae5f651fa3bf7a79e48ed09c791e14b5cb14965ab1e0c"
+    },
+    {
+      "path": "src/model/c159/c159_music_window.py",
+      "bytes": 3902,
+      "sha256": "d21000971f90d2c85a880f88114ec41c11e947004ccb12e039fe395349d9bdb3"
+    },
+    {
+      "path": "src/model/c159/c159_runtime.py",
+      "bytes": 3331,
+      "sha256": "4b82dd087aaf2842b4cb58e4e79f79a02cf5b0fe625cad1d214f90d79cdfbd30"
+    },
+    {
+      "path": "src/model/c212/c212_runtime.py",
+      "bytes": 2389,
+      "sha256": "49c0f87bc419b1614d9f02c90d7b3bfbc1d2c0318cb07d156fa25de35d301316"
+    },
+    {
+      "path": "src/model/c239/c239_runtime.py",
+      "bytes": 1675,
+      "sha256": "5586f7778dc85bfde7730eff152fce0300fc310296d38d6fce0fe8eb34b5254c"
+    },
+    {
+      "path": "src/model/c29_lpc_residual_head_v0_1.py",
+      "bytes": 12823,
+      "sha256": "cbdb8e1f4ed484999e5cc8ea4376d51166ebe1e8a0a048cc27a1248f96b948fa"
+    },
+    {
+      "path": "src/model/c346/c346_runtime.py",
+      "bytes": 2359,
+      "sha256": "5091f560de9d61d3238f482829effd04daaeda6480ac25eec99aa993412730b5"
+    },
+    {
+      "path": "src/model/c596_eat/c596_runtime.py",
+      "bytes": 8589,
+      "sha256": "0361a6694ecbf91fad39048b13b4d122513ec35e5ec3e6c3d4f8d574627e5d16"
+    },
+    {
+      "path": "src/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "bytes": 8438,
+      "sha256": "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a"
+    },
+    {
+      "path": "src/requirements.txt",
+      "bytes": 247,
+      "sha256": "d4fae5fdbc8aff71f6a5fb2ae31f1c17d1a7b212893e2f584fdac7b2c2c29ae5"
+    },
+    {
+      "path": "src/script.py",
+      "bytes": 71920,
+      "sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 5223,
+      "sha256": "df37c378cbd56a46328a10a348bf0902f738279b9c68dce3bf26f33eeb762fe1"
+    },
+    {
+      "path": "tools/verify_archive.py",
+      "bytes": 5362,
+      "sha256": "667485688cb8f5184c5147e551fc0c2eb86ffc4c6504f793c30bc8ad1c9f2659"
+    }
+  ]
+}

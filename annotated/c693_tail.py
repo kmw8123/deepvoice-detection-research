@@ -1,10 +1,16 @@
-# Annotated archive copy. I keep the executable AST identical to the original at ../src/c693_tail.py.
+# Annotated archive copy. I change comments/docstrings only; other AST nodes
+# match the original at ../src/c693_tail.py.
 # See ../THIRD_PARTY_NOTICES.md for the separate tail's upstream license and noncommercial terms.
-"""Frozen C688 tail, sharing one original DF-Arena forward per audio batch.
+"""Native-music-adapted final speech block with a shared DF-Arena encoder (C688).
 
-The caller provides the offline DF model in FP32 eval mode and puts batches
-and the tail on the same device. A batch must contain windows of one file.
-This module never changes the original model's weights or training mode.
+I reuse the original encoder's hidden representation immediately before its
+fourth Conformer block. A separately trained copy of that final block and
+classification head produces speech evidence for File, while the original
+forward still supplies the separately reported Voice score.
+
+The caller provides the offline DF-Arena model in FP32 eval mode and puts
+the batch and adapted block on the same device. Each batch contains windows
+from one file. No original-model weights or training modes are changed here.
 """
 
 import hashlib
@@ -19,8 +25,9 @@ CHECKPOINT_BYTES = 172585774
 
 
 class LastBlockAndHead(torch.nn.Module):
-    # I copied and trained the original DF's final Conformer block + fc5: 43,137,922 parameters.
-    # This does not duplicate or retrain the expensive 1B encoder.
+    # The adapted module copies DF-Arena's final Conformer block and fc5 head:
+    # 43,137,922 parameters. I reuse the upstream architecture and shared encoder;
+    # this code does not claim authorship of DF-Arena or train at inference time.
     def __init__(self):
         super().__init__()
         self.block = ConformerBlock(
@@ -40,7 +47,10 @@ class LastBlockAndHead(torch.nn.Module):
 
 
 def load_tail(path, device):
-    """Load the pinned local C688 state_dict strictly with weights_only=True."""
+    """Load the pinned native-music-adapted final speech block (C688).
+
+    I check checkpoint size and SHA before strict tensor-only FP32 loading.
+    """
     # Accept only the exact final update-128 checkpoint; do not substitute another candidate or weights of a different size.
     path = Path(path)
     if path.stat().st_size != CHECKPOINT_BYTES:
@@ -66,10 +76,11 @@ def load_tail(path, device):
 
 
 def forward_shared(df_model, tail, batch):
-    """Return original/C688 logits from one original forward and one saved-prefix tail.
+    """Return original and adapted logits from one shared encoder pass (C688).
 
     Inputs are FP32 [B, 64600], with B >= 1. Both models must already be in
     eval mode; refusing training mode preserves original BatchNorm buffers.
+    The original logits remain the Voice input; adapted logits are File inputs.
     The temporary hook is removed even when inference or validation fails.
     """
     if not isinstance(batch, torch.Tensor) or batch.ndim != 2:

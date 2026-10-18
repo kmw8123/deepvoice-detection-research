@@ -1,16 +1,16 @@
 # Reproducibility and Execution Scope
 
-I use this lightweight archive to preserve C693's executable source and documentation. I omit model weights, audio, upstream model implementations, and installation wheels, so **the source alone cannot run inference immediately**. The submission ZIP preserved in my original workspace is the authoritative package for an actual rerun.
+I use this lightweight archive to preserve the executable source and documentation for my music-aware speech adaptation pipeline with a shared encoder (C693). It combines speech and music specialists, shares the original speech encoder's intermediate representation with a separately trained final block, and uses the adapted speech evidence only in the whole-file decision. The [model card](MODEL_CARD.md) explains the architecture without requiring the experiment history. I omit model weights, audio, upstream model implementations, and installation wheels, so **the source alone cannot run inference immediately**. The submission ZIP preserved in my original workspace is the authoritative package for an actual rerun.
 
 ## Roles of the three sets of materials
 
 | Material | Role |
 |---|---|
-| `src/` | Byte-for-byte copies of C693's `script.py`, `c693_tail.py`, and eight required integration helpers |
-| `annotated/` | Explanatory copies of the two main files with English comments; their executable ASTs must match the originals, but their bytes/hashes differ |
+| `src/` | Byte-for-byte copies of the representative submission's `script.py`, `c693_tail.py`, and eight required integration helpers |
+| `annotated/` | Explanatory mirrors of the Python inference files, with English comments and docstrings; their executable ASTs must match the originals after removing docstrings, but their bytes/hashes differ |
 | ZIP and training records in my original workspace | Evidence for rerunning, preserved alongside the actual weights, original upstream implementations, configurations, licenses, and training materials |
 
-I keep the annotated copies separate from the original submission files. The original package checks Fourier/C29 source hashes, EAT source hashes, and a manifest of all file sizes; even comments can cause those checks to fail. AST equality does not replace verification of numerical results or the execution environment.
+I keep the annotated copies separate from the original submission files. The original package checks the Fourier and LPC-residual detector's source hashes, EAT source hashes, and a manifest of all file sizes; even comments can cause those checks to fail. The LPC-residual detector retains the historical ID C29 in its filenames and constants. For the annotated mirrors, I compare parsed Python structure after removing module, class, and function docstrings. This comparison checks the executable source structure, not byte identity or `__doc__` contents, and does not replace verification of numerical results or the execution environment.
 
 ## Authoritative local locations
 
@@ -24,9 +24,9 @@ artifacts/submit_c704.zip.receipt.json
 research/c687_df_native_music_adaptation/c693_package_integration/package_src/
 ```
 
-The recorded size of `submit_c693.zip` is 7,288,933,071 bytes. The ZIP receipt, `package_src/model/MODEL_MANIFEST.json`, and `SHA256SUMS_C693.txt` record the original inventory. I did not rehash large weights or the entire ZIP, or rerun the package, while preparing this archive.
+The representative shared-encoder pipeline is packaged in `submit_c693.zip`; the tied variant with an alternate Deezer pair inside File is `submit_c704.zip`. The recorded size of `submit_c693.zip` is 7,288,933,071 bytes. The ZIP receipt, `package_src/model/MODEL_MANIFEST.json`, and `SHA256SUMS_C693.txt` record the original inventory. I did not rehash large weights or the entire ZIP, or rerun the package, while preparing this archive.
 
-C693's `C693_DEPLOYMENT.json` records the packaging state on 2026-09-24. I preserve its null official ADS and items unverified at that time without overwriting them with the server results I recorded later. Documents named for C660 and the existing `MODEL_PROVENANCE.md` also describe earlier stages. The actual C693 source and C693 deployment information should be read together to understand the archived structure.
+The representative pipeline's `C693_DEPLOYMENT.json` records the packaging state on 2026-09-24. I preserve its null official ADS and items unverified at that time without overwriting them with the server results I recorded later. Documents named for the earlier direct-music-routing pipeline (C660) and the existing `MODEL_PROVENANCE.md` also describe earlier stages. The actual representative source and its deployment information should be read together to understand the archived structure; I retain their original IDs and filenames for traceability.
 
 ## Runtime assets required for restoration
 
@@ -35,17 +35,17 @@ The paths below are relative to the original `package_src/model/`. I exclude the
 | Component | Required files and directories |
 |---|---|
 | DF-Arena | `df_arena_1b/pytorch_model.bin`, `config.json`, Python implementation, `facebook/wav2vec2-xls-r-1b/config.json` |
-| C688 tail | `c693/C688_TRAINED_TAIL.pt` |
+| Music-adapted final Conformer block and `fc5` classifier (C688) | `c693/C688_TRAINED_TAIL.pt` |
 | Spectra | `spectra_aasist3/model.safetensors`, `wav2vec2_config.json`, Python implementation |
 | HTDemucs | `htdemucs/955717e8-8726e21a.th`, `htdemucs.yaml` |
 | PANNs | `panns/Cnn14_mAP=0.431.pth`, `class_labels_indices.csv`, `component_labels.json` |
 | SONICS | `sonics/pytorch_model.bin`, `config.json`, Python implementation |
-| C180 Deezer | `deezer_specnn/deezer_specnn_official_weights.v1.npz`, corresponding manifest |
-| C205 Deezer | `c212/C205_COMPAT40.npz`, corresponding manifest |
+| Augmentation-trained Deezer derivative (C180) | `deezer_specnn/deezer_specnn_official_weights.v1.npz`, corresponding manifest |
+| Continued-training Deezer derivative (C205) | `c212/C205_COMPAT40.npz`, corresponding manifest |
 | Fourier | `fourier_fingerprint/coef.float32.npy`, `intercept.float32.npy`, original feature helper |
-| C29 | `c29_lpc_residual_music/c29_lpc_residual_model.v0_1.npz`, training receipt, original helper |
-| Dasheng | Weights, configuration, and Python implementation in `c159/dasheng/`; `c159/music_head.npz` |
-| EAT | `c596_eat/model.safetensors`, `C593_FINAL_MODEL.pt`, configuration and Python implementation |
+| LPC-residual logistic detector (C29) | `c29_lpc_residual_music/c29_lpc_residual_model.v0_1.npz`, training receipt, original helper |
+| Dasheng and trained logistic head (C151) | Weights, configuration, and Python implementation in `c159/dasheng/`; `c159/music_head.npz` |
+| EAT and trained layer-specific heads (C593) | `c596_eat/model.safetensors`, `C593_FINAL_MODEL.pt`, configuration and Python implementation |
 | Installation | timm/torchvision wheels in `c596_eat/wheels/`, `SERVER_CONSTRAINTS.txt`, original requirements |
 
 The DF backbone's configuration loader reads the nested `facebook/wav2vec2-xls-r-1b/config.json` locally. Omitting this directory breaks offline restoration. PANNs prepares the bundled label CSV in the runtime user's `panns_data` directory.
@@ -73,7 +73,7 @@ Any restoration requires separate checks of the original ZIP, installation, offl
 
 ## Training reproduction records
 
-The actual training records for the C693 tail are at:
+The representative pipeline uses a separately trained final Conformer block and `fc5` classifier (C688). Its actual training records are at:
 
 ```text
 research/c687_df_native_music_adaptation/C687_TRAIN_PLAN.json
@@ -83,7 +83,7 @@ research/c687_df_native_music_adaptation/c688_stratified/C688_INPUT_REGISTRY.jso
 research/c687_df_native_music_adaptation/c688_stratified/manifests/UPDATE_128.json
 ```
 
-The C687 plan links to the C616 speech source/audio manifests, C683 native music source/audio manifests, the waveforms actually consumed and their encoded parents, and license records. `C688_TRAIN_RESULT` records the original tail used for initialization, code/scope/input hashes, the fixed schedule, and update completion results. C688 repeated 270 unique bags/596 unique windows on that schedule for 640 bag exposures/1,792 window forwards. Unique data counts and repeated exposures are different quantities.
+The initial native-music adaptation plan (`C687_TRAIN_PLAN.json`) links to the speech source/audio manifests (C616), native music source/audio manifests (C683), the waveforms actually consumed and their encoded parents, and license records. These data IDs identify source inventories, not additional deployed models. `C688_TRAIN_RESULT` records the original DF-Arena tail used for initialization, code/scope/input hashes, the fixed schedule, and update completion results. The adapted-tail training repeated 270 unique bags/596 unique windows on that schedule for 640 bag exposures/1,792 window forwards. Unique data counts and repeated exposures are different quantities.
 
 The training lineage of the inherited components is documented in the original package at:
 

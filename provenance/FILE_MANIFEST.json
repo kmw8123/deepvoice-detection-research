@@ -13,13 +13,53 @@
     },
     {
       "path": "annotated/c693_tail.py",
-      "bytes": 5708,
-      "sha256": "4ccd50fc445bc234b9c233da76e45303f17f706ee6e2a6410029a145088e862e"
+      "bytes": 6248,
+      "sha256": "f672f082e1084aa8a44b986f5706921d295842210b3df3def476f1e09fac5341"
+    },
+    {
+      "path": "annotated/model/c159/c159_music_window.py",
+      "bytes": 4681,
+      "sha256": "84190ebfcbd5d2690d7c1ddc7c6ca8e5fc852119ce02e700cd7dbda563a97691"
+    },
+    {
+      "path": "annotated/model/c159/c159_runtime.py",
+      "bytes": 4089,
+      "sha256": "a861fd23fa8947e15312a55bf43e14dd3bee0c9bd5798b0dae3a83893f267c41"
+    },
+    {
+      "path": "annotated/model/c212/c212_runtime.py",
+      "bytes": 3206,
+      "sha256": "10f521cedac51283046452f2e2af0d61e760b96ae0d6652a51d3c6e7eab41842"
+    },
+    {
+      "path": "annotated/model/c239/c239_runtime.py",
+      "bytes": 2294,
+      "sha256": "8db86b6ae83b7344a60925734b1ee64bbe9817dbbeca8643e07a21663210a113"
+    },
+    {
+      "path": "annotated/model/c29_lpc_residual_head_v0_1.py",
+      "bytes": 14070,
+      "sha256": "92e40cea4cbea7864340bf2d41f3d3a7e9c97e034b0c515059643b10f5741f45"
+    },
+    {
+      "path": "annotated/model/c346/c346_runtime.py",
+      "bytes": 3177,
+      "sha256": "32be5cc3ddec4f1f59c39dc5bf901b05be565fb49da3e0d9250930b74f8b3521"
+    },
+    {
+      "path": "annotated/model/c596_eat/c596_runtime.py",
+      "bytes": 10741,
+      "sha256": "14b025121b5f1b8f8ce44fb63b44e84aee338ee3e74b097cace345d70011b837"
+    },
+    {
+      "path": "annotated/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "bytes": 8932,
+      "sha256": "ffcd10bab25b134239eea67bf4e3180e0367d9f4b5d4e83f6e096fe8708a84f4"
     },
     {
       "path": "annotated/script.py",
-      "bytes": 74526,
-      "sha256": "f7e966e40d3bec928fd9cbc975a377325baae61adb5c4930a3ae77e72f0d0b22"
+      "bytes": 79016,
+      "sha256": "424eac8f3f17e8f3d26d6241528b913e68b018b63efea8993bacc56dcd2b6ea4"
     },
     {
       "path": "experiment_inventory.json",
@@ -28,18 +68,18 @@
     },
     {
       "path": "EXPERIMENTS.md",
-      "bytes": 184507,
-      "sha256": "34980e081abde459b69c04120026d590e3feaeeff41ef556ca34cc8b853fd844"
+      "bytes": 185393,
+      "sha256": "4119e0530929dbeb4a3b77659c8ef705546d8499518d62bf11db6ac8d45dd9c3"
     },
     {
       "path": "LICENSE_POLICY.md",
-      "bytes": 3351,
-      "sha256": "6e56a0f44a11ebdc37c3025e4e182cb115c18ddbb11b7b2ef7972614326f1d48"
+      "bytes": 3707,
+      "sha256": "140473cc8b4f03fc9bee4a4811d2c3e310a34f35c81075d850aafcb3321f01fe"
     },
     {
       "path": "MODEL_CARD.md",
-      "bytes": 9093,
-      "sha256": "9cb8f2f90c445faafe2ce7f6a552f54d4abc17455a0f23d5d402f5cd1e863a7a"
+      "bytes": 12379,
+      "sha256": "af387f6f889850fe8848a3a760a4be893404168cb6ced7fb337b8603c0179d0f"
     },
     {
       "path": "notices/C693_PROVENANCE.md",
@@ -103,18 +143,18 @@
     },
     {
       "path": "provenance/source_manifest.json",
-      "bytes": 8646,
-      "sha256": "bb5573603a65555da8dab981311af90b682f133e2750261031c525b7a0d247b5"
+      "bytes": 13797,
+      "sha256": "6f64a242194a03f8991f04a980f7499b2746518488bd25ca103bc70fda7e3798"
     },
     {
       "path": "README.md",
-      "bytes": 4491,
-      "sha256": "db0cbda4cff891c753c33286365f37fd6c90282efe819bace1ddf03dcb700a5a"
+      "bytes": 7834,
+      "sha256": "effd0c6c92be254c17c871fc2c8a76c78dbaa506bca5dda611bc02b3c3901dcb"
     },
     {
       "path": "REPRODUCIBILITY.md",
-      "bytes": 9029,
-      "sha256": "4015868f08b7cbe72154b92fcfe8f6cd42e2c5b5abb36d989c32ace0a3604025"
+      "bytes": 10582,
+      "sha256": "2530ea442047fb598b87b9c1975c56163913d339a30d758aabb1d3d87636b2f8"
     },
     {
       "path": "src/c693_tail.py",
@@ -173,13 +213,18 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "bytes": 5664,
-      "sha256": "d82df038fd411bbd7d4d4c0665fbcaca834f1abfd6c95d4dbe323bcee15fc406"
+      "bytes": 5870,
+      "sha256": "a32c9d2d64c4f3318c9562989f372fe2ab02bf8ffcc6b9bd42a9476072bb0900"
+    },
+    {
+      "path": "tools/test_archive_ast.py",
+      "bytes": 4984,
+      "sha256": "1150e274ed5559e7aac17b8f6d47c4c55e4ffbd8dffbb2674fbb2459891f50fa"
     },
     {
       "path": "tools/verify_archive.py",
-      "bytes": 6038,
-      "sha256": "460378f60cf3d3190abeeb8ef75de41f8a8c3921cf95ea0fc82188548d4c10a7"
+      "bytes": 10081,
+      "sha256": "e25beea18172b247ad51297b6e935e2c6b3c46b662fba5fa9714979b4acfe71a"
     }
   ]
 }

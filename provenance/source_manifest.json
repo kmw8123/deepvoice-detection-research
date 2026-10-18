@@ -1,5 +1,7 @@
 {
   "date": "2026-09-28",
+  "editorial_revision_date": "2026-10-19",
+  "annotation_comparison_policy": "Full AST identity is recorded separately from equality after removing only first-statement module/class/function/async-function docstrings. Runtime strings and all other AST nodes remain compared.",
   "copied": [
     {
       "archive_path": "src/c693_tail.py",
@@ -158,20 +160,94 @@
   ],
   "annotated": [
     {
-      "original": "src/script.py",
-      "annotated": "annotated/script.py",
-      "original_sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84",
-      "annotated_sha256": "f7e966e40d3bec928fd9cbc975a377325baae61adb5c4930a3ae77e72f0d0b22",
-      "ast_identical": true,
-      "scope": "comments only; no execution or numerical test"
-    },
-    {
       "original": "src/c693_tail.py",
       "annotated": "annotated/c693_tail.py",
       "original_sha256": "f178536cc58858d7415ae5f651fa3bf7a79e48ed09c791e14b5cb14965ab1e0c",
-      "annotated_sha256": "4ccd50fc445bc234b9c233da76e45303f17f706ee6e2a6410029a145088e862e",
-      "ast_identical": true,
-      "scope": "comments only; no execution or numerical test"
+      "annotated_sha256": "f672f082e1084aa8a44b986f5706921d295842210b3df3def476f1e09fac5341",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c159/c159_music_window.py",
+      "annotated": "annotated/model/c159/c159_music_window.py",
+      "original_sha256": "d21000971f90d2c85a880f88114ec41c11e947004ccb12e039fe395349d9bdb3",
+      "annotated_sha256": "84190ebfcbd5d2690d7c1ddc7c6ca8e5fc852119ce02e700cd7dbda563a97691",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c159/c159_runtime.py",
+      "annotated": "annotated/model/c159/c159_runtime.py",
+      "original_sha256": "4b82dd087aaf2842b4cb58e4e79f79a02cf5b0fe625cad1d214f90d79cdfbd30",
+      "annotated_sha256": "a861fd23fa8947e15312a55bf43e14dd3bee0c9bd5798b0dae3a83893f267c41",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c212/c212_runtime.py",
+      "annotated": "annotated/model/c212/c212_runtime.py",
+      "original_sha256": "49c0f87bc419b1614d9f02c90d7b3bfbc1d2c0318cb07d156fa25de35d301316",
+      "annotated_sha256": "10f521cedac51283046452f2e2af0d61e760b96ae0d6652a51d3c6e7eab41842",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c239/c239_runtime.py",
+      "annotated": "annotated/model/c239/c239_runtime.py",
+      "original_sha256": "5586f7778dc85bfde7730eff152fce0300fc310296d38d6fce0fe8eb34b5254c",
+      "annotated_sha256": "8db86b6ae83b7344a60925734b1ee64bbe9817dbbeca8643e07a21663210a113",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c29_lpc_residual_head_v0_1.py",
+      "annotated": "annotated/model/c29_lpc_residual_head_v0_1.py",
+      "original_sha256": "cbdb8e1f4ed484999e5cc8ea4376d51166ebe1e8a0a048cc27a1248f96b948fa",
+      "annotated_sha256": "92e40cea4cbea7864340bf2d41f3d3a7e9c97e034b0c515059643b10f5741f45",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c346/c346_runtime.py",
+      "annotated": "annotated/model/c346/c346_runtime.py",
+      "original_sha256": "5091f560de9d61d3238f482829effd04daaeda6480ac25eec99aa993412730b5",
+      "annotated_sha256": "32be5cc3ddec4f1f59c39dc5bf901b05be565fb49da3e0d9250930b74f8b3521",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/c596_eat/c596_runtime.py",
+      "annotated": "annotated/model/c596_eat/c596_runtime.py",
+      "original_sha256": "0361a6694ecbf91fad39048b13b4d122513ec35e5ec3e6c3d4f8d574627e5d16",
+      "annotated_sha256": "14b025121b5f1b8f8ce44fb63b44e84aee338ee3e74b097cace345d70011b837",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "annotated": "annotated/model/fourier_fingerprint/fourier_fingerprint_features_v1.py",
+      "original_sha256": "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a",
+      "annotated_sha256": "ffcd10bab25b134239eea67bf4e3180e0367d9f4b5d4e83f6e096fe8708a84f4",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
+    },
+    {
+      "original": "src/script.py",
+      "annotated": "annotated/script.py",
+      "original_sha256": "200d9b69f8651f2856a39763e0bfb725a98cf9f3e900b22e8e916ceff8ad1d84",
+      "annotated_sha256": "424eac8f3f17e8f3d26d6241528b913e68b018b63efea8993bacc56dcd2b6ea4",
+      "ast_identical": false,
+      "executable_ast_identical_excluding_docstrings": true,
+      "scope": "comments and leading Python docstrings only; __doc__ may differ; all other AST nodes are identical; no execution or numerical test"
     }
   ]
 }

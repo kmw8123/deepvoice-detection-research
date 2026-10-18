@@ -4,7 +4,11 @@ Written: 2026-09-28 · Competition: DACON 236749 Deepvoice Detection · Status: 
 
 ## 1. Results and how to read this report
 
-My highest recorded server ADS was **0.8362380952**, a tie between **C693 and C704**. C704 made one additional change to the Deezer path, so I chose the simpler **C693** as the representative implementation in this archive. The overall score of 0.8515229365 is distinct from the ADS of 0.8362380952. **I did not reach my target ADS of 0.85.** I was in 30th place when I stopped the research; I have not independently verified the official final ranking.
+My highest recorded server ADS was **0.8362380952**, a tie between **music-aware speech adaptation with a shared encoder (C693)** and **the same pipeline with an alternate Deezer pair inside File (C704)**. I chose the simpler shared-encoder pipeline as the representative implementation in this archive. The overall score of 0.8515229365 is distinct from the ADS of 0.8362380952. **I did not reach my target ADS of 0.85.** I was in 30th place when I stopped the research; I have not independently verified the official final ranking.
+
+### Method names and historical identifiers
+
+This report retains experiment IDs to make the chronology and evidence index searchable. They are not architecture names and do not imply that every numbered entry is a trained model. For a first reading, the important sequence is: time-aligned voice/music event fusion (C51), a four-expert music ensemble (C596), routing that ensemble into the File head's direct music input (C660), native-music adaptation of the speech detector's final block/classifier (C688), and shared-encoder integration of that adapted tail into File only (C693). The [model card](MODEL_CARD.md) explains these components independently of their IDs. Code symbols, evidence paths, and the chronological inventory retain their original names for traceability.
 
 I compiled this retrospective from the records I retained, from the initial baseline through C753. I did not run new experiments to prepare it. I record why I changed each model, what I actually measured on public data, the server results, counterexamples, implementation and evaluation errors, and why I moved to the next approach.
 
@@ -35,7 +39,7 @@ I repeatedly consulted public validation results when selecting architectures, s
 
 I retained the actual training files, parents, checkpoints, failure records, and best submission ZIP in the original workspace. Neither this report nor a SHA index replaces the obligation to preserve actual training data. Unresolved rights-transfer and weight-redistribution conditions remain unresolved.
 
-## 2. Early research — from the official baseline to C349
+## 2. Early research — baseline, forensic features, and expert fusion (V1–C349)
 
 I reconstructed this retrospective from the records I preserved for 2026-08-27 through 2026-09-10, focusing on why I changed models, what actually happened, and how I changed direction after failures. C numbers are not training-run counts. Research, data acquisition, implementation audits, formula replay, actual training, and packaging share the same numbering system; a higher number does not mean I ran that many independent experiments. Below, `public` means local evaluation on externally available public material, and `server` means my recorded DACON submission results. I do not treat a public ADS proxy as the same measurement as server ADS.
 
@@ -78,7 +82,7 @@ The recorded CPS for the submissions above from V3 onward is .9890865079. Only t
 
 Evidence: Section 1, "Which Outputs Moved the Score," in `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`.
 
-### 2.2 V1-V3: I First Learned About Model Roles and Temporal Aggregation
+### 2.2 I First Learned About Model Roles and Temporal Aggregation (V1-V3)
 
 The official baseline used PANNs for Voice/Music presence, HTDemucs for component separation, and DF-Arena1B for authenticity. In V1, I added the Music expert SONICS beta5s, but mixed accompaniment DF and SONICS with equal logit weights without supporting evidence, and also included raw-audio SONICS in File OR. The server run succeeded, but ADS was .66046. With CPS already .98908, the remaining possible total-score gain from CPS was only about .0011, which led me to prioritize authenticity.
 
@@ -90,7 +94,7 @@ In a later pooling audit, the EER difference between the minimum at .63 and the 
 
 Evidence: `docs/SOLUTION_V1.md`, Sections 2-5; `docs/SOLUTION_V2.md`, Sections 2-4; early retrospective, Sections 4-5; the full `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md`.
 
-### 2.3 Exploration Around V4 and V5: Diversity Among Music Experts Produced the First Major Change
+### 2.3 Diversity Among Music Experts Produced the First Major Change (V4–V5)
 
 An ArtifactNet preparation folder named V4 exists, but it would be incorrect to describe V4 as an actually promoted and submitted version. Raw ArtifactNet achieved pure-music macro EER .10/AUC .9625, but weakened to EER .25-.325 on wideband speech mixtures and .325-.375 under a telephone approximation. Applied to Demucs accompaniment, it achieved pure-music EER .05 yet output at least .5 for all 20 speech-only accompaniment examples. This showed that accompaniment separation could introduce new artifacts and speech leakage. Replacing raw Music improved macro EER from .510417 to .368056 relative to SONICS, but failed the absolute and telephone-condition gates. Fixed/conditional fusion produced zero additional EER improvement. Temporal median had an overall figure of .15, but zero crossfit EER improvement.
 
@@ -104,7 +108,7 @@ This phase also included mistakes that I caught before training with incorrect p
 
 Evidence: early retrospective, Sections 6-8 and 11; `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md`, Section 2.
 
-### 2.4 C1-C13 and v7-v25: Better File Fusion and a Shift Toward Early Testing
+### 2.4 Better File Fusion and a Shift Toward Early Testing (C1-C13 and v7-v25)
 
 After V5, I compared C0=official MAX, C1=untrained soft OR, and C2=nonnegative calibrated OR on the public 200-example panel. File EER was .1851648352/.1703296703/.1554945055. C1 failed the AUC, sequential-condition, and bootstrap criteria; C2 failed the strict promotion criteria because its bootstrap result was .7438964844 and its worst-cell deterioration was .05. Nevertheless, a limited C2 server test improved ADS to approximately .78445. This illustrated that a small development set's gates could not perfectly judge server generalization; it did not justify retroactively changing the gate to PASS.
 
@@ -133,7 +137,7 @@ A later audit identified an important target-interpretation error for Nes2Net-X.
 
 Evidence: `research/v6_file_fusion_itw/FULL_400_V4_2_DEVELOPMENT_RESULT_AUDIT_2026-09-02.md`, Sections 6-8; `docs/FAST_LEADERBOARD_PROBES_2026-09-03.md`; `docs/C3_FOLLOWUP_AND_C8_NEXT_SUBMISSION_2026-09-04.md`; `research/v22_c3_residual_scout/C10_MUSIC_FIXED_LOGIT_CONSENSUS_DECISION_2026-09-04.md`; `research/v17_afss_fast_probe_v0_1/AFSS_FAST_PROBE_REJECTION_2026-09-03.md`; `research/v18_qamo_fast_probe_v0_1/QAMO_BATCH24_STOP_2026-09-03.md`; `research/v19_antideepfake_small_fast_probe_v0_1/ANTIDEEPFAKE_SMALL_FAST_GATE_DECISION_2026-09-04.md`; C369 audit, Sections 1-3.
 
-### 2.5 C26-C52: Small Forensic Features Worked, but Their Fusion Path Mattered
+### 2.5 Small Forensic Features Worked, but Their Fusion Path Mattered (C26-C52)
 
 Phase/coherence features (C27) showed a signal, improving standalone Fourier EER from .326389 to .298611, but replacing the full triad worsened EER from .215278 to .229167. I fixed the initial allfit-score leakage and cross-fold pair-statistics issues, and additional actual exploratory evaluations exist even after the sentinel stop. C28 multiscale292 improved overlap EER from .55 to .35 and tied clean EER at .50, but I stopped it under the criteria then in force because clean AUC fell from .545 to .4975. Describing either candidate as unexecuted or entirely without signal would erase these partial results.
 
@@ -151,7 +155,7 @@ C51 passed five logits to the File Music-event head: C46 global Music, presence,
 
 Evidence: early retrospective, Sections 14-16; `research/c369_early_candidate_failure_audit/C369_EARLY_CANDIDATE_FAILURE_AUDIT_2026-09-10.md`, Sections 4-5; `research/c370_c29_c51_retrospective/C370_PROMISING_CANDIDATE_CODE_AUDIT_2026-09-10.md`; `submission_c51_uncompressed_file_music_src/C51_SUBMISSION_HANDOFF_2026-09-05.md`; `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, Sections 2-3.
 
-### 2.6 C53-C159: A Small Development Set, Dilution of New Scores, and Validation/Submission Mismatches
+### 2.6 A Small Development Set, Dilution of New Scores, and Validation/Submission Mismatches (C53-C159)
 
 This phase branched into temporal Fourier, component calibration, local raw/stem consensus, presence/layout routing, raw Spectra/Voice supplementation, Music resolution, stem-leakage mitigation, LBP texture, and related ideas. Each number must not be counted as a newly trained large model. Many C61-C88 hypotheses changed the arrangement and fusion of existing scores, intervals, and features. C71/C75 retained public File gains, but their bootstrap evidence was weak. I reconsidered and packaged C71 after exact Fourier vectorization delivered roughly a ninefold speedup for 30 calls over 60 seconds. Public File EER improved from .144505 to .114835, but server ADS .7908095238 was below C51.
 
@@ -165,7 +169,7 @@ C159 applied frozen Dasheng plus my C151 head to a four-second segment selected 
 
 Evidence: `docs/RESEARCH_RESUME_STATUS_2026-09-06.md`; `docs/RESEARCH_RESUME_STATUS_2026-09-07.md`; `docs/C51_FUSION_AND_RESEARCH_DIRECTION_AUDIT_2026-09-07.md`, Sections 2-5; the first two sections of `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`.
 
-### 2.7 C162-C241: I Trained Experts on Actual Material and Changed Where I Used Them
+### 2.7 I Trained Experts on Actual Material and Changed Where I Used Them (C162-C241)
 
 After C159, I concluded that repeatedly training heads on frozen representations was insufficient and trained Deezer's final convolution plus dense/output layers. C166 on existing material, C169 with 60 additional MusicGen sources, C174's Fourier+LPC source expansion, and C178's fixed average failed to beat C51 on the full public evaluation despite some held-out gains. Changing segment aggregation from mean to max in C171 improved Music160 from .425 to .3625 and sequential EER from .30 to .15, but worsened overlap from .50 to .55 and introduced false positives on new sources. Both dilution of temporally short fakes and REAL false positives from maximum aggregation were present.
 
@@ -179,7 +183,7 @@ C241 combined C239, which weighted the Deezer window average by PANNs Music-pres
 
 Evidence: follow-on completion sections in `docs/C159_SERVER_FAILURE_AND_RESTART_2026-09-08.md`; `docs/C190_TO_C212_RESEARCH_2026-09-08.md`, Sections 3-7; `docs/RESEARCH_RESUME_STATUS_2026-09-09.md`; `docs/C241_RESEARCH_AND_SUBMISSION_2026-09-09.md`.
 
-### 2.8 C242-C349: After Repeated Failures in Further Training, I Separated External Music Fusion from File Fusion
+### 2.8 After Repeated Failures in Further Training, I Separated External Music Fusion from File Fusion (C242-C349)
 
 After C241, I actually examined source-paired JS, provider balancing, deeper CNNs, codec augmentation, expanded sources/temporal crops, MuQ/MERT/PANNs/Spectra representations, SONICS adaptation, REAL-only density, nonlinear heads, and longer temporal observations. The table below lists representative results for which the baseline and comparison scope were established. All are public results; I do not average numbers across different rows or add them together as an expected server gain.
 
@@ -222,13 +226,13 @@ The early name `telephone_g711` did not mean an actual 8k telephone band. Origin
 
 Evidence: `docs/DEVELOPMENT_CHANNEL_SEMANTICS_CORRECTION_2026-09-10.md`; `docs/VOICE_POOLING_EVIDENCE_SCOPE_CORRECTION_2026-09-10.md`; `docs/PAST_EXPERIMENT_IMPLEMENTATION_AUDIT_2026-09-10.md`; `docs/SERVER_SCORE_CHANGES_AND_NEXT_MODEL_EVIDENCE_2026-09-10.md`.
 
-## 3. C350–C660 — carrying model improvements through to the final File decision
+## 3. Carrying model improvements through to the final File decision (C350–C660)
 
 During this period, my central question shifted from “Which detector should I train next?” to “Where do the detection signals I already have disappear before the final decision?” Starting from C349, I tested a joint File classifier, voice-model adaptation, broader music sources, partial-fake training, temporal attention, EAT representations, and larger models. Many candidates that completed actual training and public validation still tied or regressed in the final combination. Ultimately, C660 added no new neural network: I changed one input through which existing music evidence reached File, raising my recorded server ADS from C596's 0.8174523810 to 0.8274523810.
 
 The public EER values here are generally **development metrics using the authenticity of a music or voice source as a proxy label**. They are not equivalent to competition metrics with confirmed component labels for both vocals and accompaniment, official ADS, or server performance. The meaning of `OOF` also depends on which model excluded which source units. I distinguished validation in which the entire acoustic model had not seen the evaluated sources from validation in which only a combiner over fixed acoustic scores excluded those sources during training. Even a large panel can consist of repeated transformations of the same parents, so I report both row counts and actual source counts below.
 
-### 3.1 C413: A Good Small Joint Classifier Was Not Sufficient Evidence to Replace the Existing Structure
+### 3.1 A Good Small Joint Classifier Was Not Sufficient Evidence to Replace the Existing Structure (C413)
 
 After C350, I tried to reduce File errors that remained despite C349's improvements to the external Music output. After several combinations of global, temporal, and voice-event evidence, C412 became a 12-coefficient model that jointly learned voice and music events from 10 fixed features. I retained Voice and Music BCE and replaced only File BCE with pairwise logistic ranking balanced by class and source. This did not directly optimize discontinuous EER; it was a ranking objective encouraging a higher File score for FAKE than for REAL.
 
@@ -242,7 +246,7 @@ My recorded server result was ADS **0.8003809524** and total score 0.8192515079,
 
 Evidence: `research/c412_pairwise_joint_file/C412_RESULT_REPORT_2026-09-10.md`, `SOURCEPAIR_UNCERTAINTY_2026-09-10.md`; `docs/C413_RESEARCH_AND_SUBMISSION_2026-09-10.md`; `docs/C414_C413_FAILURE_AND_VALIDATION_RESET_2026-09-10.md`.
 
-### 3.2 C414–C446: Actual Representation Learning Still Had to Transfer Across Sources and Into Its Final Role
+### 3.2 Actual Representation Learning Still Had to Transfer Across Sources and Into Its Final Role (C414–C446)
 
 After C413, I moved beyond output combinations and trained the representations themselves. C414 updated the full C205 Deezer CNN with a gradient-reversal auxiliary objective intended to suppress six voice/channel conditions. I completed training on 4,176 actual waveforms from 696 music sources, with 3 epochs and 3,132 updates. I also checked the gradient and weight changes in the first convolution, the GRL sign, saving and restoring, and non-use of held data. Even so, EER on held766/133 sources worsened from **0.225889 to 0.241594**. A falling training BCE and condition-based auxiliary learning did not establish invariant representations or generalization. Because data balance and full-layer updating also changed, I did not identify GRL alone as the cause of failure.
 
@@ -254,7 +258,7 @@ C445 tested a narrower hypothesis closer to actual deployment. I adapted only Sp
 
 Evidence: `research/c414_adversarial_full_training/C414_RESULT_AND_FAILURE_2026-09-10.md`; `research/c417_sonics_file_training/C417_RESULT_AND_LIMITS_2026-09-10.md`; `research/c423_aasist_cross_generator_probe/C423_RESULT_AND_FAILURE_2026-09-10.md`; `research/c433_c430_final_external/C433_C434_FINAL_FINDINGS_2026-09-11.md`; `research/c436_frozen_probe_external/C435_C436_FINAL_FINDINGS_2026-09-11.md`; `research/c445_spectra_stem_adaptation/C445_RESULT_AND_LIMITS_2026-09-11.md`; `research/c446_spectra_stem_file_transfer/C446_RESULT_AND_STOP_2026-09-11.md`.
 
-### 3.3 C465: Learning a New Generator Succeeded, but Evidence From Short Events Was Diluted
+### 3.3 Learning a New Generator Succeeded, but Evidence From Short Events Was Diluted (C465)
 
 The base music-training data contained 3,690 rows derived from 631 tracks. REAL comprised 273 FMA tracks and 24 MUSAN tracks; FAKE comprised 334 tracks. I applied clean, real-voice mixture, Kokoro synthetic-voice mixture, and telephone transformations to the same fixed 4-second music excerpts. Training weight was equalized by class, then identity, then view, rather than by generator. Four Suno buckets and Yue accounted for a large share of the fake music. outer766 contained transformations of 133 tracks, and 50 DiffRhythm tracks among its 78 FAKE tracks were absent from TRAIN. It was therefore neither a fully generator-held evaluation nor an evaluation with an identical distribution. Treating the 3,690 rows as 3,690 new pieces of music would greatly overstate data diversity.
 
@@ -266,7 +270,7 @@ An audit of saved window scores showed that Deezer had not entirely missed the e
 
 Evidence: `research/c566_eat_lastblock/C566_PUBLIC_TRAINING_COVERAGE_AUDIT.md`; `research/c461_deezer_teacher_preservation/C461_RESULT_AND_LIMITS_2026-09-11.md`; `research/c465_riffusion_expansion_kd/C465_FREEZE.md`, `C465_RESULT_AND_LIMITS_2026-09-11.md`; `research/c466_c465_music_transfer/C466_RESULT_AND_NEXT_2026-09-11.md`; `research/c467_c465_broader_transfer/C467_RESULT_AND_LIMITS_2026-09-11.md`, `C467_PARTIAL_WINDOW_DIAGNOSIS_2026-09-11.md`.
 
-### 3.4 C473–C547: Partial Fakes, Temporal Attention, and Preservation of the Original Teacher
+### 3.4 Partial Fakes, Temporal Attention, and Preservation of the Original Teacher (C473–C547)
 
 C473 froze C465 features and trained a temporal head with 4,545 parameters. I added 1,024 actually edited rows to the existing 3,978 rows. These included REAL controls edited at the same positions (RR), 2-second FAKE insertions into REAL backgrounds (RF), continuous REAL/FAKE examples, and telephone conditions. I jointly supervised local occupancy and a max-logit bag. Training completed on 5,002 rows with 5,976 updates, but the overall benefit on the new held256 did not translate into consistent gains on partial fakes. partial128 EER was worse for C473 at 0.3125 than for C465 max at 0.296875. In contrast, a fixed combination with C180 in C475 showed complementarity: Music160 improved from 0.25 to 0.2125 and novel64 from 0.124103 to 0.078462.
 
@@ -280,7 +284,7 @@ C536 directly distilled the original C205's window decisions and file-level prob
 
 Evidence: `research/c473_diverse_longbag_training/C473_FINAL_RESULT.md`; `research/c488_boundary_auxiliary/C488_RESULT.md`; `research/c493_robust_fourier_training/C493_RESULT_AND_FAILURE.md`; `research/c497_phase_cnn_training/C497_RESULT_AND_FAILURE.md`; `research/c499_regularized_phase_training/C499_RESULT_AND_FAILURE.md`; `research/c549_linear_spectrum_lcnn/C549_RESULT_AND_NEXT_DECISION.md`; `research/c520_learned_temporal_pool/C520_FREEZE.md`, `C520_FINAL_PARITY_FAILURE_2026-09-12.md`; `research/c532_c520_music_submission/C532_PUBLIC_EVIDENCE_AND_HANDOFF.md`; `research/c533_c532_postmortem/AUDIT.md`; `research/c536_c205_teacher_attention/C536_C537_RESULT_AND_LIMITS.md`; `research/c548_c547_postmortem/C548_SERVER_RESULT_AND_SCOPE.md`.
 
-### 3.5 C548: Reassessing Validation Independence
+### 3.5 Reassessing Validation Independence (C548)
 
 The audit after C547 showed that I could not readily interpret the public improvements as three independent successes. Music160 had been actual training data for the C346 final combiner. novel64 and extra128 were not confirmation sets used only once for a new model either. An exact SHA comparison showed that **all 16 music parents in extra128 also appeared in novel64, and 35 novel64 rows came from those parents.** extra128 contained transformations of 8 music pairs/16 parents, 7 REAL artists, and 2 additional voice parents. Including the shared voice sources made the parent graph a single connected component.
 
@@ -290,7 +294,7 @@ I subsequently designated the existing200/64/128/16 as regression and diagnostic
 
 Evidence: `research/c548_c547_postmortem/VALIDATION_RESET_FINDINGS.md` and its referenced `C548_MANIFEST_COVERAGE_CHECK.json`.
 
-### 3.6 C572–C596: EAT Added a New Representation, and Its Assigned Role Shaped the Outcome
+### 3.6 EAT Added a New Representation, and Its Assigned Role Shaped the Outcome (C572–C596)
 
 In C564, I verified the original public EAT-base assets, revision, license, and dependencies. I did not treat them as already successful detection weights; I actually evaluated a frozen head and final-block adaptation. Starting from C566, C572 added 97 new music sources plus sparse-music and real-voice conditions. The original 3,690+582 became 4,272 rows/728 music sources, trained for 2 epochs and 1,068 updates. Standalone outer766 EER worsened from C566's 0.220492 to C572's 0.235091, but on the same multiwindow extra128 it improved substantially from **0.3125 to 0.203125**.
 
@@ -306,7 +310,7 @@ C594 combined this raw C593 as an independent expert using the same 304-row, 9-f
 
 Evidence: `research/c564_eat_base/C564_ACQUIRED_ASSETS.md`; `research/c572_eat_sparse_music/C572_FREEZE.md`, `C572_OUTER_RESULT_AND_LIMITS.md`, `C572_MULTIWINDOW_RESULT_AND_KEEP.md`; `research/c575_eat_independent_expert/C575_GROUPHELD_RESULT_AND_LIMITS.md`; `research/c577_c575_submission/ROOT_PUBLIC_DECISION.md`; `research/c578_c577_result_audit/C577_EQUAL_SCORE_PUBLIC_COUNTEREXAMPLES_AND_LIMITS.md`; `research/c583_eat_matched_splice/C583_TRANSFER_RESULT_AND_NEXT.md`; `research/c584_splice_eat_expert/C584_INITIAL_RESULT_AND_NEXT.md`; `research/c593_eat_depth_augmented/C593_FREEZE.md`, `C593_TRANSFER_RESULT_AND_NEXT.md`; `research/c594_depth_augmented_expert/RESULT_AND_NEXT.md`, `C594_CLUSTER_UNCERTAINTY.md`; `docs/C586_C596_SERVER_RESULTS_2026-09-14.md`.
 
-### 3.7 C596–C651: A Stronger Standalone Model Still Did Not Necessarily Produce Better Final Outputs
+### 3.7 A Stronger Standalone Model Still Did Not Necessarily Produce Better Final Outputs (C596–C651)
 
 Subsequent representation research also produced measured gains. C630 used frozen EAT-large layers 8/16/24 while retaining the same 4,400 rows and objective. Standalone multi128 EER improved from C593's 0.1875 to 0.125, and outer766 from 0.165767 to 0.126747. C631, which also adapted the final block, raised multi128 AUC from 0.932617 to 0.957031, but overall EER tied at 0.125 and the same 16 files were wrong at the overall EER boundary. C646 temporal MIL reduced EER in the partial condition from 0.25 to 0.1875, but tied overall at 0.125 and trailed the existing final combination in other continuous and overlap conditions.
 
@@ -314,7 +318,7 @@ As part of my decision to reconsider the architecture, I also compared using a s
 
 Evidence: `research/c630_eat_large_depth/RESULT_AND_LIMITS.md`; `research/c631_eat_large_lastblock/RESULT_AND_LIMITS.md`; `research/c633_standalone_direct/RESULT_AND_LIMITS.md`; `research/c646_large_temporal_mil/RESULT_AND_LIMITS.md`; `docs/RESEARCH_STRUCTURE_RESET_2026-09-15.md`.
 
-### 3.8 C652–C660: Diagnosing the Complete File Path Produced a Larger Change Than Adding Models
+### 3.8 Diagnosing the Complete File Path Produced a Larger Change Than Adding Models (C652–C660)
 
 C652 distinguished historical fold predictions from actual deployment constants and revisited C596's complete File path. File EER was 0.12967033 on 200 rows already exposed during training, and all 9 REAL false positives at the diagnostic boundary crossed it on internal music-event evidence alone. However, diagnostic variants that forced Presence to 1 or removed either the raw or stem branch lost more correct decisions. I also did not treat oracle analyses using injected ground truth as achievable model performance.
 
@@ -369,9 +373,9 @@ Fourth, **independent sources and exposure history mattered more than file count
 
 Finally, I carried out these experiments while retaining source, version, license, and actual training-file records. Permission for public noncommercial research use and exclusive rights transfer for final prize deliverables were separate issues, and the rights HOLDs affecting several lineages were not comprehensively resolved during this period. I also exclude models, audio, and per-file validation predictions from this retrospective to keep performance reporting separate from redistribution of third-party assets. I do not recast experimental plans or drafts as completed results, public proxies as official ADS, or my recorded rankings as an official final ranking.
 
-## 4. After C660: What improved, and why progress stalled
+## 4. What improved, and why progress stalled (C660–C753)
 
-### 4.1 C660 → C693: Two gains from correcting the evidence paths
+### 4.1 Two gains from correcting the evidence paths (C660 → C693)
 
 C660 achieved a server ADS of **0.8274523810**, an increase of +0.0100000000 over C596's 0.8174523810. I did not add another expert. I replaced the direct Fourier input slot so the evidence already computed by the external Music ensemble could reach the internal File path. My quantitative diagnosis—that FAKE evidence detected by several experts was not reaching the final fusion strongly enough—proved useful.
 
@@ -395,7 +399,7 @@ In a clean local Windows environment, I checked a serial smoke test from an actu
 
 Evidence: `docs/C660_SERVER_RESULT_AND_NEXT_2026-09-20.md`, `docs/C693_SERVER_RESULT_AND_NEXT_2026-09-24.md`, `docs/C693_FILE_VOICE_ADAPTATION_2026-09-24.md`.
 
-### 4.2 C704, C710, and C722: Better standalone metrics did not mean a better deployed combination
+### 4.2 Better standalone metrics did not mean a better deployed combination (C704, C710, and C722)
 
 C704 replaced the internal File Deezer pair, C180+C205, with C180+C465. I left external Music unchanged. Its server ADS was **exactly the same as C693's**. In C709's public-data trace, the effect shrank at each stage: a mean absolute C465−C205 difference of about 0.07997 became 0.03999 after averaging, 0.03909 after presence aggregation, 0.01129 at qMusic, and 0.00973 at File. All 400 REAL–FAKE rank pairs in known40 remained unchanged. Some pairs improved in retention100, but its EER remained 0.02. The public measurements therefore support **a change that propagated but did not move the EER boundary enough**, rather than a change that never took effect. They do not prove the composition of the hidden server data.
 
@@ -407,7 +411,7 @@ I rejected C723's internal Spectra change because EER tied while AUC declined. F
 
 Evidence: `docs/C704_SERVER_TIE_AND_NEXT_2026-09-25.md`, `docs/C710_SERVER_REGRESSION_AND_LESSON_2026-09-26.md`, `docs/C722_SERVER_FAILURE_AND_RESEARCH_RESET_2026-09-27.md`.
 
-### 4.3 C724–C728: Separating model weaknesses from evaluation mistakes
+### 4.3 Separating model weaknesses from evaluation mistakes (C724–C728)
 
 On C724's 40 pure-speech files, all relevant paths in C660 and C693 had EER 0 / AUC 1. That means I found no errors on that small public panel, not that the models had no speech-related weaknesses. Some source names included telephone/G711, but the actual inputs were 16 kHz µ-law with different crops. They were not equivalent to genuinely 8 kHz band-limited telephone speech, and the causal effects of cropping and codec were not isolated.
 
@@ -419,7 +423,7 @@ C727 inspected four retained actual TRAIN files. For its two FAKE files, qVoice 
 
 The first window of a partial FAKE file can be mostly REAL, with only 600 FAKE samples. Copying the file's FAKE label to every window would create an incorrect training target. I therefore investigated **file/bag-level losses** that included the temporal aggregation used at deployment.
 
-### 4.4 C729–C742: Retention constraints and the limits of small heads
+### 4.4 Retention constraints and the limits of small heads (C729–C742)
 
 | Family | Actual change and TRAIN observation | Public transfer / decision |
 |---|---|---|
@@ -437,7 +441,7 @@ I also retained implementation failures separately. C741 V1's relative-versus-ab
 
 Evidence: `research/c729_deployed_event_tail/RESULT_AND_NEXT.md`, `research/c731_fc5_only_deployed_event/TRAIN_AUDIT_DECISION.md`, `research/c734_pair_rank_contrast/TRAIN_AUDIT_DECISION.md`, `research/c740_bounded_mix_classification/TRAIN_AUDIT_DECISION.md`, `research/c742_c740_late_transfer/RESULT_AND_NEXT.md`.
 
-### 4.5 C743–C753: Direct music-readout and event learning still failed to transfer
+### 4.5 Direct music-readout and event learning still failed to transfer (C743–C753)
 
 C742's path diagnosis showed qMusic dominating some selected FAKE errors while qVoice was very low. This suggested a need to improve music evidence directly. Source-proxy labels, however, did not establish the authenticity of individual components or reveal server dataset proportions.
 

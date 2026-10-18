@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
-# Archive annotation copy (2026-09-28): I added comments and kept C693's executable statements unchanged.
+# Archive annotation copy: I explain the fixed final submission pipeline (C693).
+# I edit comments/docstrings only; all other statements and values match the original.
 # The byte-identical original is ../src/script.py; see ../MODEL_CARD.md for architecture, rights, and reproduction limits.
 # This directory is not an executable submission package: weights, upstream implementations, and the full manifest are absent.
-"""DACON 236749 C693 fixed C688 native-domain tail, File-only integration.
+"""Offline audio deepfake inference with a separately adapted File path (C693).
 
-All C596 models, weights, preprocessing, windows and component/presence outputs
-are unchanged. Only FILE_FAKE_PROB is recomputed with the original C51 raw/stem
-paths, replacing their direct Fourier input with the existing external Music
-probability. Legacy global/aligned music and all coefficients stay frozen.
-The frozen C688 tail reads the same DF prefix once per window and changes only
-the internal raw/stem voice evidence supplied to C660 File. Original external
-Voice, Music and Presence outputs remain unchanged. No fitting or routing.
-Each file is predicted independently; no evaluation-set statistics or fitting.
+I start at main(), verify packaged assets, match audio files to submission IDs,
+and process each file independently before writing the five probability columns.
+PANNs estimates component presence; HTDemucs supplies voice/accompaniment stems.
+Speech detectors score the voice stem and raw mix. Music detectors consume the
+raw mix or accompaniment according to their own fixed preprocessing contracts.
+
+The final File probability uses both raw-mix and voice-stem speech evidence,
+with a native-music-adapted final speech block (C688) sharing the original
+DF-Arena encoder. The existing logistic event formulas (C51) receive the final
+music ensemble in their direct music-evidence slot (C660). Global and aligned
+legacy music inputs remain in those formulas. Taking the larger raw/stem File
+score preserves a raw-mix fallback when separation weakens speech evidence.
+
+The separately reported Voice probability still uses the original speech model.
+Music uses the fixed presence-weighted Deezer/Fourier/Dasheng/EAT blend (C596);
+the two Presence outputs come from PANNs. Earlier File and music intermediates
+remain for provenance, but are overwritten before output. No inference fitting,
+routing learned from evaluation data, or statistics from other files are used.
 """
 from __future__ import annotations
 
@@ -61,18 +72,21 @@ SONICS_SEGMENT_SAMPLES = 80_000
 SILENCE_RMS = 1e-5
 
 # Fixed, per-file limits make the worst-case runtime independent of file order.
-# Six uniformly spaced crops cover a 60 second file at roughly 10 second gaps.
+# I sample up to six evenly spaced speech windows, including both boundaries.
 MAX_DF_SEGMENTS = 6
-# This limits sampling to six uniformly placed crops; it does not inspect every instant of a long recording.
+# The six speech crops do not inspect every instant of a long recording;
+# the accompaniment detector below has its own twelve-crop limit.
 MAX_SONICS_SEGMENTS = 12
 DF_BATCH_SIZE = 2
 SPECTRA_BATCH_SIZE = 3
 ROBUST_POOL_MAX_WEIGHT = 0.75
 SONICS_BATCH_SIZE = 6
 
-# Public Deezer SpecNN full-width V7 signal path.  source_nyquist_372 keeps
-# only bins supported by the original 16 kHz stem after exact 44.1 kHz
-# resampling.  Per-file pooling is the arithmetic mean of 1-P_REAL.
+# Public Deezer SpecNN full-width V7 signal path. source_nyquist_372 keeps
+# only bins supported by the original 16 kHz raw audio after 44.1 kHz
+# resampling. The base helper returns an initial arithmetic mean of 1-P_REAL.
+# Deployed inference averages matching windows from two detectors, then pools
+# those paired probabilities using the same file's music-presence weights.
 DEEZER_MODEL_RATE = 44_100
 DEEZER_SEGMENT_SAMPLES = 34_398
 DEEZER_MAX_SEGMENTS = 12
@@ -94,13 +108,16 @@ DEEZER_INPUT = "raw"
 TRIAD_WEIGHT_TOTAL = 8
 TRIAD_LOGIT_EPSILON = 1e-6
 
-# Frozen C2 File-fusion calibrator fitted only on the public full-400
-# development split. Component predictions remain byte/semantically unchanged.
+# The earlier monotone logistic event calibrator (C2) was fitted only on the
+# public full-400 development split. I retain it for historical comparison;
+# the final inference path below uses the later aligned-event formulas.
 C2_FILE_FUSION_ID = "C2_monotone_calibrated_or"
 C2_FILE_LOGIT_EPSILON = 1e-06
 C2_VOICE_PARAMETERS = (-2.0869628015642805, 1.0625184085698496, 0.6041475168370548)
 C2_MUSIC_PARAMETERS = (0.6957057142670172, 1.0422811159994994, 0.5001081908291056)
 
+# Temporal alignment adds presence-weighted event evidence (C3); the later
+# music formula keeps separate direct classical-detector inputs (C51).
 C3_FILE_FUSION_ID = 'C3_safeguarded_aligned_or'
 C3_FILE_LOGIT_EPSILON = 1e-06
 C3_VOICE_PARAMETERS = (-0.8595823450507174, 0.46889799013355016, 0.5244599073233204, 1.254272264295923)
@@ -109,7 +126,8 @@ C51_FILE_FUSION_ID = "C51_c46_uncompressed_fourier_c29_music_or"
 C51_MUSIC_PARAMETERS = (0.6247621768875313, 0.1758110900096306, 0.32782341355110767, 0.235938364315404, 0.38193243652953396, 0.0)
 
 DEEZER_NPZ_SHA256 = "a73e90ecd65772699ea5856d7b05e2725a284caf449404673819110223a364d8"
-# Despite the filename official_weights, this SHA identifies the C180 derivative weights I fine-tuned.
+# Despite the filename official_weights, this SHA identifies fine-tuned
+# derivative SpecNN weights (C180), not the upstream release's unchanged weights.
 DEEZER_MANIFEST_SHA256 = "483ae36c6c3408bec8006d3283b7c4974b7d951d0284e4266d5ef69d073676bc"
 FOURIER_FEATURE_SOURCE_SHA256 = "f4cee4b5aba70dbc11d7b6ff2d457bc4931114dfaccccf5a97381daf5ecaae8a"
 FOURIER_COEF_SHA256 = "05cc68dd0f99eea5b96180c0c6274aaa6029416936c3e2e002aaca025ab3885a"
@@ -150,7 +168,8 @@ SUPPORTED_AUDIO_EXTENSIONS = {
     ".wma",
 }
 
-# Heavy packages are deliberately imported only after --self-test handling.
+# I defer heavy imports until after argument parsing; each diagnostic loads
+# its own dependencies, and ordinary inference loads the complete runtime.
 np = None
 torch = None
 torchaudio = None
@@ -704,7 +723,12 @@ def predict_voice_fake(
     audio,
     device,
 ) -> float:
-    """Fuse paired per-window voice evidence, then apply official max pooling."""
+    """Retain the legacy speech helper with fixed max/mean logit pooling.
+
+    I pool fused window logits as 0.75 * max + 0.25 * mean before the sigmoid.
+    The final run_inference path uses predict_voice_fake_c3 instead, retaining
+    window intervals and both original/adapted evidence for File alignment.
+    """
 
     if calculate_rms(audio) < SILENCE_RMS:
         return 0.0
@@ -983,6 +1007,11 @@ def predict_c29_music_fake(c29_head, arrays, raw_complete_audio) -> float:
 def blend_classical_music_scores(
     fourier_probability: float, c29_probability: float
 ) -> float:
+    """Blend Fourier and the selected-window music head with fixed 3:1 logits.
+
+    The second argument keeps its historical residual-head name; the final
+    inference path passes the selected-window Dasheng probability here.
+    """
     scores = (float(fourier_probability), float(c29_probability))
     if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in scores):
         raise ValueError("Classical detector inputs must be finite probabilities in [0,1]")
@@ -1055,7 +1084,10 @@ def combine_file_fake_score(
     voice_present: float,
     music_present: float,
 ) -> float:
-    """Frozen C2 monotone-calibrated branches followed by probabilistic OR."""
+    """Combine monotone logistic component events with noisy-OR (C2).
+
+    I retain this earlier helper; run_inference uses the later event formulas.
+    """
 
     inputs = (voice_fake, music_fake, voice_present, music_present)
     if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in inputs):
@@ -1084,6 +1116,7 @@ def bounded_probability(value: float, name: str, audio_id: str) -> float:
 
 
 def c3_interval_bounds(starts: list[int], window_samples: int, audio_length: int):
+    """Express crop intervals in source samples, clipping at the file boundary."""
     ends = [min(start + window_samples, audio_length) for start in starts]
     if not starts or any(start < 0 or end <= start for start, end in zip(starts, ends)):
         raise RuntimeError("C3 interval geometry drift")
@@ -1141,6 +1174,7 @@ def c3_overlap_weighted(
 
 
 def predict_presence_c3(model, voice_indices, music_indices, audio):
+    """Return PANNs presence maxima and window evidence for temporal alignment."""
     starts = get_segment_starts(int(audio.size), DF_SEGMENT_SAMPLES, max_segments=None)
     predictions, _ = model.inference(make_panns_segments(audio))
     predictions = np.asarray(predictions)
@@ -1169,8 +1203,14 @@ def predict_presence_c3(model, voice_indices, music_indices, audio):
 def predict_voice_fake_c3(
     df_model, df_fake_label_index, spectra_model, audio, device, *, file_tail=None
 ):
-    # The outputs serve different roles: original DF feeds external Voice; the C688 tail feeds voice evidence inside File.
-    # Window positions and Spectra are shared; the trained tail does not replace the external Voice score.
+    """Score matching speech windows for the reported Voice and internal File paths.
+
+    With an adapted final speech block (C688), I return both original and
+    adapted evidence. Each result contains a pooled probability, interval
+    bounds, and window logits; the final File formula also needs aligned events.
+    """
+    # Original DF-Arena feeds the reported Voice score. The adapted final block
+    # feeds only speech evidence inside File; crop locations and Spectra are shared.
     if calculate_rms(audio) < SILENCE_RMS:
         empty = (0.0, [], [], [])
         return (empty, empty) if file_tail is not None else empty
@@ -1329,6 +1369,11 @@ def predict_deezer_fake_c3(model, audio, device):
 def aligned_voice_event_c3(
     starts, ends, fused_logits, presence_starts, presence_ends, presence_probabilities
 ) -> float:
+    """Pool speech evidence after weighting each window by local voice presence.
+
+    The factor ranges from 0.5 to 1, so weak presence softens rather than
+    discards the detector's evidence. All intervals belong to one file.
+    """
     if not fused_logits:
         return 0.0
     local_presence = c3_overlap_weighted(
@@ -1353,6 +1398,13 @@ def aligned_music_event_c3(
     presence_probabilities,
     fourier_probability,
 ) -> float:
+    """Preserve the legacy music-event evidence used inside the File formula.
+
+    I align SpecNN and PANNs to accompaniment-detector windows, blend music
+    logits with fixed 2:3:3 weights, and pool the strongest local events.
+    The historical Fourier-named argument receives the caller's combined
+    Fourier/Dasheng classical score in the final inference path.
+    """
     if not sonics_probabilities:
         return 0.0
     local_deezer = c3_overlap_weighted(
@@ -1390,6 +1442,13 @@ def combine_c51_file_fake_score(
     fourier_music_fake,
     c29_music_fake,
 ) -> float:
+    """Turn global and aligned component evidence into a File probability (C51).
+
+    Separate fixed logistic formulas estimate voice-fake and music-fake events;
+    noisy-OR combines those events. The final caller passes its music ensemble
+    into the historical direct Fourier slot, while keeping the other inputs.
+    The retained direct residual-head coefficient is zero.
+    """
     # Fixed logistic formulas produce voice event qV and music event qM, then combine them with noisy-OR.
     # These values do not guarantee perfect calibration; the function name does not describe a single detector.
     values = (
@@ -1438,9 +1497,15 @@ def combine_c660_file_fake_score(
     aligned_music,
     c29_music_fake,
 ) -> float:
-    """Reuse both frozen C51 paths; replace only the direct Fourier slot."""
-    # C660's key change: pass the already computed external Music ensemble into the direct Fourier argument slot.
-    # Fourier remains in the legacy/external Music paths. Use the larger of the raw/stem OR scores.
+    """Use final music-ensemble evidence in both raw/stem File formulas (C660).
+
+    I reuse the fixed logistic event coefficients (C51). The legacy global
+    music probability and aligned music event retain their original roles;
+    only the former direct Fourier argument receives the final music ensemble.
+    """
+    # This connects the improved reported Music score to the File decision.
+    # Fourier still contributes through the legacy and final music ensembles.
+    # Use the larger raw-mix/voice-stem noisy-OR score for the final File output.
     stem_file = combine_c51_file_fake_score(
         voice_fake, legacy_music_fake, voice_present, music_present,
         aligned_voice, aligned_music, external_music_fake, c29_music_fake,
@@ -1455,6 +1520,12 @@ def combine_c660_file_fake_score(
 def run_inference(
     audio_files: list[Path], submission_rows: list[dict[str, object]], device
 ) -> list[dict[str, object]]:
+    """Load frozen local assets, then produce five probabilities for each file.
+
+    I keep historical loader names and console messages for traceability.
+    Comments below describe the current data flow, including overwritten
+    intermediates that do not become output probabilities.
+    """
     started = time.monotonic()
     print(
         "Loading C241: C212 models, music-presence-conditioned Deezer and File-only raw voice rescue..."
@@ -1525,15 +1596,18 @@ def run_inference(
             fourier_coefficient, fourier_intercept, fourier_feature, original_audio
         )
         c29_music_fake = predict_c29_music_fake(c29_head, c29_arrays, original_audio)
-        # I retain the C29 calculation to preserve the historical path and checks. C51's current direct C29 coefficient is 0.0.
+        # I retain the linear-prediction residual calculation (C29) and checks.
+        # Its direct coefficient in the File event formula (C51) is currently 0.0.
         selected_dasheng = selected_music_model.predict(
             original_audio, presence_starts, presence_ends, music_presence_segments
         )
-        # C212 replaces ONLY indirect C29; direct File C29 stays original.
+        # The selected-window Dasheng score replaces the residual head only
+        # inside the classical music blend (C212). The direct residual input remains.
         classical_music_fake = blend_classical_music_scores(
             fourier_music_fake, selected_dasheng
         )
-        # The second component here is selected Dasheng, not C29.
+        # Despite historical argument names, this classical score combines
+        # Fourier evidence with the selected-window Dasheng probability.
         music_fake = blend_triad_music_scores(
             sonics_music_fake, deezer_music_fake, classical_music_fake
         )
@@ -1541,7 +1615,8 @@ def run_inference(
             c212_anchor, sonics_music_fake, deezer_music_fake,
             fourier_music_fake, selected_dasheng
         )
-        # This historical C346 intermediate value is overwritten below by C596's final external Music score.
+        # This earlier fixed music blend (C346) is a legacy intermediate.
+        # The EAT-augmented final music ensemble (C596) overwrites it below.
         aligned_voice = aligned_voice_event_c3(
             voice_starts,
             voice_ends,
@@ -1572,8 +1647,9 @@ def run_inference(
             fourier_music_fake,
             c29_music_fake,
         )
-        # C232: retain C212's stem voice and all four external outputs.
-        # Raw voice uses the SAME existing models, windows and C3 calibrator.
+        # The raw-mix speech fallback (C232) addresses separation losses using
+        # the same detectors, crop rules and aligned-event formulas (C3).
+        # The reported Voice probability continues to use the separated voice.
         original_raw_voice, adapted_raw_voice = predict_voice_fake_c3(
             df_model, fake_label_index, spectra_model, original_audio, device, file_tail=file_tail
         )
@@ -1589,21 +1665,23 @@ def run_inference(
         )
         # Same music event in both File calls: max here == OR(max(qV), qM).
         file_fake = max(file_fake, raw_file_fake)
-        # C596: original C349 File is complete; change external Music only.
+        # The earlier raw/stem File calculation (C349) is complete here.
+        # I now compute the EAT-augmented reported Music probability (C596).
         c596_music = c596_music_model.predict(
             original_audio, c212_anchor, presence_starts, presence_ends,
             music_presence_segments, deezer_music_fake, fourier_music_fake, selected_dasheng)
         external_music_fake = c596_music["Music"]
-        # Final external Music is a fixed logit combination of D239/Fourier/Dasheng/EAT.
-        # The file_fake calculated above with original C51 is also recomputed below and is not the final output.
+        # The final Music blend combines presence-weighted dual Deezer,
+        # Fourier, selected-window Dasheng and pooled EAT logits (C596).
+        # I recompute the earlier File intermediate below before writing output.
         file_aligned_voice = aligned_voice_event_c3(
             file_vs, file_ve, file_vl, presence_starts, presence_ends, voice_presence_segments,
         )
         file_raw_aligned_voice = aligned_voice_event_c3(
             file_raw_vs, file_raw_ve, file_raw_vl, presence_starts, presence_ends, voice_presence_segments,
         )
-        # C660: only File's direct music-evidence slot changes. All existing
-        # model calls and the four component/presence outputs stay unchanged.
+        # The final music-to-File connection (C660) replaces the direct
+        # music-evidence slot while keeping the existing global/aligned inputs.
         file_fake = combine_c660_file_fake_score(
             voice_fake=file_voice_fake,
             raw_voice_fake=file_raw_voice_fake,
@@ -1616,8 +1694,10 @@ def run_inference(
             aligned_music=aligned_music,
             c29_music_fake=c29_music_fake,
         )
-        # The last call above produces the actual FILE_FAKE_PROB using C688 raw/stem voice and C660's music connection.
-        # The other four outputs below retain original Voice, C596 Music, and the two PANNs Presence scores.
+        # The last call produces FILE_FAKE_PROB from adapted raw/stem speech
+        # evidence (C688) and the final music-ensemble connection (C660).
+        # The other outputs retain original Voice, the final music blend (C596),
+        # and the two PANNs Presence scores.
         values = {
             "FILE_FAKE_PROB": file_fake,
             "VOICE_FAKE_PROB": voice_fake,
@@ -1825,6 +1905,11 @@ def run_self_test() -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Dispatch diagnostics or run offline inference and atomically save the CSV.
+
+    The ordinary path checks local assets and aligns filename stems to sample
+    IDs before model loading. This archive lacks the assets needed to run it.
+    """
     args = parse_arguments(argv)
     if args.self_test:
         run_self_test()
